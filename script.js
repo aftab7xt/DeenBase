@@ -3,13 +3,29 @@ let homeHTML = "";
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
 
+// Major Books of Bukhari (Static List for "Explore")
+const bukhariBooks = [
+    { id: 1, title: "Revelation" }, { id: 2, title: "Belief" }, { id: 3, title: "Knowledge" },
+    { id: 4, title: "Ablution" }, { id: 5, title: "Bathing (Ghusl)" }, { id: 6, title: "Menstrual Periods" },
+    { id: 7, title: "Rubbing hands and feet (Tayammum)" }, { id: 8, title: "Prayers (Salat)" },
+    { id: 9, title: "Virtues of Prayer" }, { id: 10, title: "Call to Prayer (Adhan)" },
+    { id: 11, title: "Friday Prayer" }, { id: 12, title: "Fear Prayer" },
+    { id: 13, title: "Two Eids" }, { id: 14, title: "Witr Prayer" },
+    { id: 15, title: "Invoking Allah for Rain" }, { id: 16, title: "Eclipses" },
+    { id: 17, title: "Prostration of Quran" }, { id: 18, title: "Shortening Prayers" },
+    { id: 19, title: "Night Prayer (Tahajjud)" }, { id: 20, title: "Virtues of Prayer in Makkah/Madinah" },
+    { id: 21, title: "Actions while Praying" }, { id: 22, title: "Forgetfulness in Prayer" },
+    { id: 23, title: "Funerals (Al-Janaa'iz)" }, { id: 24, title: "Zakat (Charity)" },
+    { id: 25, title: "Hajj (Pilgrimage)" }, { id: 26, title: "Umrah" },
+    { id: 27, title: "Pilgrims Prevented" }, { id: 28, title: "Penalty of Hunting" },
+    { id: 29, title: "Virtues of Madinah" }, { id: 30, title: "Fasting (Saum)" }
+];
+
 window.onload = function() {
     const display = document.getElementById('display');
     homeHTML = display.innerHTML;
-    
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-    
     loadFonts();
     loadDailyHadith();
     const hash = window.location.hash.substring(1);
@@ -50,6 +66,36 @@ function goHome(pushHistory = true) {
     window.scrollTo(0,0);
 }
 
+// === EXPLORE SCREEN (NEW) ===
+function showExplore() {
+    updateActiveNav('navExplore');
+    const display = document.getElementById('display');
+    
+    // Create Explore Screen HTML
+    let booksHTML = "";
+    bukhariBooks.forEach(book => {
+        booksHTML += `
+            <div class="book-card" onclick="fetchHadith('${book.title}', true)">
+                <div class="book-number">Book ${book.id}</div>
+                <div class="book-title">${book.title}</div>
+            </div>
+        `;
+    });
+
+    display.innerHTML = `
+        <div id="exploreScreen">
+            <h3 style="margin: 20px 0 15px 0; color:var(--primary); font-family: 'Zalando Sans SemiExpanded', sans-serif;">Browse by Books</h3>
+            <div class="books-grid">
+                ${booksHTML}
+            </div>
+            <button class="back-home-btn" onclick="goHome()">← Back to Home</button>
+        </div>
+    `;
+    
+    window.scrollTo(0,0);
+    triggerHaptic();
+}
+
 // === SEARCH HISTORY ===
 function saveHistory(query) {
     if(!query) return;
@@ -79,37 +125,6 @@ document.addEventListener('click', function(e) {
         document.querySelectorAll('.history-dropdown').forEach(el => el.classList.add('hidden'));
     }
 });
-
-// === SEARCH LOGIC (FIXED) ===
-function focusSearch() {
-    const heroInput = document.getElementById('heroInput');
-    const headerSearch = document.getElementById('headerSearch');
-
-    // 1. If we are on Home Screen, Hero Input exists. Focus it.
-    if (document.body.contains(heroInput)) {
-        heroInput.focus();
-        window.scrollTo(0, 0);
-    } 
-    // 2. If Header Search is visible (e.g. reading a Hadith), focus it.
-    else if (!headerSearch.classList.contains('hidden')) {
-        document.getElementById('headerInput').focus();
-    }
-    // 3. If in Favorites (No inputs visible), go Home then Focus.
-    else {
-        goHome();
-        // Slight delay to allow DOM to render the home screen
-        setTimeout(() => {
-            const newHero = document.getElementById('heroInput');
-            if(newHero) {
-                newHero.focus();
-                window.scrollTo(0, 0);
-            }
-        }, 50);
-    }
-    
-    updateActiveNav('navSearch');
-    triggerHaptic();
-}
 
 function searchFromHero() { const q = document.getElementById('heroInput').value; if(q) fetchHadith(q); }
 function searchFromHeader() { const q = document.getElementById('headerInput').value; if(q) fetchHadith(q); }
@@ -161,164 +176,6 @@ function showFavorites() {
     }
     display.innerHTML = `<h3 style="margin-bottom:20px; color:var(--primary);">Your Favorites (${favorites.length})</h3>`;
     const listContainer = document.createElement('div');
-    listContainer.style.cssText = "border-radius:20px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);";
-    favorites.forEach(h => {
-        const item = document.createElement('div');
-        item.className = 'compact-card';
-        let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
-        if(preview.length > 80) preview = preview.substring(0, 80) + "...";
-        item.innerHTML = `<div class="compact-header"><span>Sahih Al-Bukhari - ${h.hadithNumber}</span><span>❤️</span></div><div class="compact-preview">${preview}</div>`;
-        item.onclick = () => { display.innerHTML=""; renderFullCard(h); window.scrollTo(0,0); };
-        listContainer.appendChild(item);
-    });
-    display.appendChild(listContainer);
-    const btn = document.createElement('button');
-    btn.className = "back-home-btn";
-    btn.innerText = "← Back to Home";
-    btn.onclick = () => goHome();
-    display.appendChild(btn);
-}
-
-// === SHARE AS IMAGE ===
-async function shareCard(card) {
-    triggerHaptic();
-    const btns = card.querySelectorAll('button');
-    const watermark = document.createElement('div');
-    watermark.className = 'watermark';
-    watermark.innerText = "Read at aftab7xt.github.io/DeenBase/";
-    card.appendChild(watermark);
-    watermark.style.display = 'block';
-    btns.forEach(b => b.style.display = 'none');
-    try {
-        const bgColor = getComputedStyle(document.body).getPropertyValue('--card-bg');
-        const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2 });
-        const link = document.createElement('a');
-        link.download = 'deenbase-share.png';
-        link.href = canvas.toDataURL();
-        link.click();
-    } catch(err) { alert("Could not create image"); }
-    btns.forEach(b => b.style.display = 'block');
-    watermark.remove();
-}
-
-async function fetchHadith(query, pushHistory = true) {
-    saveHistory(query);
-    triggerHaptic();
-    const display = document.getElementById('display');
-    const loader = document.getElementById('loader');
-    const headerSearch = document.getElementById('headerSearch');
-    const headerInput = document.getElementById('headerInput');
-    display.innerHTML = ""; 
-    loader.classList.remove('hidden'); 
-    headerSearch.classList.remove('hidden'); 
-    headerInput.value = query; 
-    document.querySelectorAll('.history-dropdown').forEach(el => el.classList.add('hidden'));
-    
-    const isNumber = !isNaN(query);
-    const param = isNumber ? `hadithNumber=${query}` : `paginate=200`;
-    
-    try {
-        const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&${param}`;
-        const response = await fetch(url);
-        const result = await response.json();
-        loader.classList.add('hidden');
-        if (result.hadiths && result.hadiths.data.length > 0) {
-            if (isNumber) renderFullCard(result.hadiths.data[0]);
-            else {
-                const lower = query.toLowerCase();
-                const filtered = result.hadiths.data.filter(h => h.hadithEnglish.toLowerCase().includes(lower));
-                if (filtered.length > 0) renderCompactList(filtered, query);
-                else display.innerHTML = "<p style='text-align:center; margin-top:20px;'>No matches found.</p>";
-            }
-            if(pushHistory) history.pushState({query: query}, "", "#" + query);
-        } else { display.innerHTML = "<p style='text-align:center; margin-top:20px;'>No Hadiths found.</p>"; }
-    } catch (e) { loader.classList.add('hidden'); display.innerHTML = "<p style='text-align:center; margin-top:20px;'>Connection Error.</p>"; }
-}
-
-function renderCompactList(data, query) {
-    const display = document.getElementById('display');
-    display.innerHTML = `<div class='results-info'>Found ${data.length} results for "${query}"</div>`;
-    const list = document.createElement('div');
-    list.style.cssText = "border-radius:20px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);";
-    data.forEach(h => {
-        const item = document.createElement('div');
-        item.className = 'compact-card';
-        let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
-        if(preview.length > 120) preview = preview.substring(0, 120) + "...";
-        item.innerHTML = `<div class="compact-header"><span>Sahih Al-Bukhari - ${h.hadithNumber}</span><span>➔</span></div><div class="compact-preview">${preview}</div>`;
-        item.onclick = () => { display.innerHTML=""; renderFullCard(h); window.scrollTo(0,0); };
-        list.appendChild(item);
-    });
-    display.appendChild(list);
-    const btn = document.createElement('button');
-    btn.className = "back-home-btn";
-    btn.innerText = "← Back to Home";
-    btn.onclick = () => goHome();
-    display.appendChild(btn);
-}
-
-function renderFullCard(h) {
-    const display = document.getElementById('display');
-    const shareText = `Sahih Bukhari ${h.hadithNumber}\n\n${h.hadithEnglish}`;
-    const grade = h.status ? h.status : "Sahih"; 
-    const favIcon = isFavorite(h.hadithNumber) ? "❤️" : "🤍";
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-        <div class="card-top-actions">
-            <div><div class="hadith-header">Sahih Al-Bukhari - ${h.hadithNumber}</div><div class="hadith-grade">Grade: <span class="grade-badge">${grade}</span></div></div>
-            <button class="fav-btn">${favIcon}</button>
-        </div>
-        <p class="arabic">${h.hadithArabic}</p>
-        <div class="lang-toggle"><span class="tab-eng active">English</span><span class="tab-urdu">Urdu</span></div>
-        <div class="trans-content"><p class="trans-text content-eng">${h.hadithEnglish}</p><p class="trans-text content-urdu hidden urdu-font" style="direction:rtl; text-align:right;">${h.hadithUrdu}</p></div>
-        <div class="action-row"><button class="copy-btn">📋 Copy</button><button class="share-btn">📸 Share Image</button></div>
-        <button class="back-home-btn">← Back to Home</button>
-    `;
-    const tabEng = card.querySelector('.tab-eng'); const tabUrdu = card.querySelector('.tab-urdu');
-    const contentEng = card.querySelector('.content-eng'); const contentUrdu = card.querySelector('.content-urdu');
-    tabEng.onclick = () => { tabEng.classList.add('active'); tabUrdu.classList.remove('active'); contentEng.classList.remove('hidden'); contentUrdu.classList.add('hidden'); triggerHaptic(); };
-    tabUrdu.onclick = () => { tabUrdu.classList.add('active'); tabEng.classList.remove('active'); contentUrdu.classList.remove('hidden'); contentEng.classList.add('hidden'); triggerHaptic(); };
-    card.querySelector('.copy-btn').onclick = () => { fallbackCopyText(shareText); triggerHaptic(); };
-    card.querySelector('.share-btn').onclick = () => shareCard(card);
-    card.querySelector('.back-home-btn').onclick = () => { goHome(); triggerHaptic(); };
-    card.querySelector('.fav-btn').onclick = (e) => toggleFavorite(e.target, h);
-    display.appendChild(card);
-}
-
-async function loadDailyHadith() {
-    const dailySection = document.getElementById('dailySection');
-    const dailyCard = document.getElementById('dailyCard');
-    if(!dailySection || !dailyCard) return;
-    dailySection.classList.remove('hidden');
-    const shortHadithIDs = [1, 9, 13, 16, 33, 47, 50, 600, 6136, 6412];
-    const today = new Date().getDate();
-    const idToLoad = shortHadithIDs[today % shortHadithIDs.length];
-
-    try {
-        const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&hadithNumber=${idToLoad}`;
-        const response = await fetch(url);
-        const result = await response.json();
-        if (result.hadiths && result.hadiths.data.length > 0) {
-            const h = result.hadiths.data[0];
-            let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
-            if(preview.length > 150) preview = preview.substring(0, 150) + "...";
-            dailyCard.innerHTML = `<div class="daily-quote">"${preview}"</div><div class="daily-ref">Sahih Al-Bukhari - ${h.hadithNumber}</div>`;
-            dailyCard.onclick = () => fetchHadith(h.hadithNumber);
-        }
-    } catch (e) { dailyCard.innerHTML = "Failed to load."; }
-}
-
-function getRandomHadith() { fetchHadith(Math.floor(Math.random() * 7000) + 1); }
-function fallbackCopyText(text) {
-    const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
-    try { document.execCommand('copy'); showToast("Copied!"); } catch (err) { alert('Unable to copy'); }
-    document.body.removeChild(textArea);
-}
-function showToast(msg) {
-    const toast = document.getElementById("toast"); toast.innerText = msg || "Copied to Clipboard!"; toast.className = "show";
-    setTimeout(() => { toast.className = ""; }, 3000);
-}
     listContainer.style.cssText = "border-radius:20px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);";
     favorites.forEach(h => {
         const item = document.createElement('div');

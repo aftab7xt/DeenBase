@@ -24,7 +24,7 @@
             <h2 class="logo" onclick="goHome()">DeenBase</h2>
         </div>
         <div class="search-container header-search hidden" id="headerSearch">
-            <input type="text" id="headerInput" placeholder="Search Hadith..." onfocus="showHistory('header')" autocomplete="off">
+            <input type="text" id="headerInput" placeholder="Search Hadith # or Keyword..." onfocus="showHistory('header')" autocomplete="off">
             <button onclick="searchFromHeader()">Search</button>
             <div id="headerHistory" class="history-dropdown hidden"></div>
         </div>
@@ -58,31 +58,29 @@
         <div class="welcome-screen" id="welcomeScreen">
             
             <div class="greeting-area">
-                <div class="greeting-sub">Bismillah</div>
-                <h1 class="greeting-main">Seek Knowledge</h1>
-            </div>
-            
-            <div class="hero-search-container">
-                <input type="text" id="heroInput" placeholder="What are you looking for?" onfocus="showHistory('hero')" autocomplete="off">
-                <button onclick="searchFromHero()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="21" x2="16.65" y2="16.65"></line><circle cx="11" cy="11" r="8"></circle></svg>
-                </button>
-                <div id="heroHistory" class="history-dropdown hidden"></div>
+                <div class="greeting-arabic">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</div>
             </div>
 
-            <div class="topics-scroller">
-                <div class="topic-chip" onclick="fetchHadith('Prayer')">Prayer</div>
-                <div class="topic-chip" onclick="fetchHadith('Fasting')">Fasting</div>
-                <div class="topic-chip" onclick="fetchHadith('Charity')">Charity</div>
-                <div class="topic-chip" onclick="fetchHadith('Patience')">Patience</div>
-                <div class="topic-chip" onclick="fetchHadith('Manners')">Manners</div>
-                <div class="topic-chip" onclick="fetchHadith('Knowledge')">Knowledge</div>
+            <div class="topics-container">
+                <div class="section-label">Browse Topics</div>
+                <div class="topics-scroller">
+                    <div class="topic-chip" onclick="fetchHadith('Prayer')">Prayer</div>
+                    <div class="topic-chip" onclick="fetchHadith('Fasting')">Fasting</div>
+                    <div class="topic-chip" onclick="fetchHadith('Charity')">Charity</div>
+                    <div class="topic-chip" onclick="fetchHadith('Patience')">Patience</div>
+                    <div class="topic-chip" onclick="fetchHadith('Manners')">Manners</div>
+                    <div class="topic-chip" onclick="fetchHadith('Knowledge')">Knowledge</div>
+                </div>
             </div>
 
             <div class="daily-hadith-section hidden" id="dailySection">
                 <div class="daily-section-title">✨ Daily Wisdom</div>
                 <div class="daily-card" id="dailyCard">
                     <div class="daily-spinner"></div>
+                </div>
+                
+                <div class="home-actions">
+                    <button class="action-btn" onclick="getRandomHadith()">Read Random Hadith</button>
                 </div>
             </div>
         </div>

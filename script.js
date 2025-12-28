@@ -6,8 +6,10 @@ let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
 window.onload = function() {
     const display = document.getElementById('display');
     homeHTML = display.innerHTML;
+    
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    
     loadFonts();
     loadDailyHadith();
     const hash = window.location.hash.substring(1);
@@ -160,7 +162,10 @@ async function shareCard(card) {
     const btns = card.querySelectorAll('button');
     const watermark = document.createElement('div');
     watermark.className = 'watermark';
-    watermark.innerText = "Read on DeenBase";
+    
+    // === UPDATED WATERMARK TEXT ===
+    watermark.innerText = "Read at aftab7xt.github.io/DeenBase/";
+    
     card.appendChild(watermark);
     watermark.style.display = 'block';
     
@@ -275,3 +280,4 @@ function showToast(msg) {
     const toast = document.getElementById("toast"); toast.innerText = msg || "Copied to Clipboard!"; toast.className = "show";
     setTimeout(() => { toast.className = ""; }, 3000);
 }
+

@@ -6,10 +6,8 @@ let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
 window.onload = function() {
     const display = document.getElementById('display');
     homeHTML = display.innerHTML;
-    
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-    
     loadFonts();
     loadDailyHadith();
     const hash = window.location.hash.substring(1);
@@ -47,6 +45,22 @@ function goHome(pushHistory = true) {
     updateActiveNav('navHome');
     if(pushHistory) history.pushState(null, "", window.location.pathname);
     triggerHaptic();
+    window.scrollTo(0,0);
+}
+
+// === SEARCH LOGIC ===
+function focusSearch() {
+    const display = document.getElementById('display');
+    // If welcome screen exists, we are on Home. Focus Hero Input.
+    if(display.querySelector('.welcome-screen')) {
+        document.getElementById('heroInput').focus();
+        window.scrollTo(0,0);
+    } else {
+        // We are on a results page. Focus Header Input.
+        document.getElementById('headerInput').focus();
+    }
+    updateActiveNav('navSearch');
+    triggerHaptic();
 }
 
 // === SEARCH HISTORY ===
@@ -79,15 +93,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// === SEARCH LOGIC ===
-function focusSearch() {
-    const heroInput = document.getElementById('heroInput');
-    if(document.contains(heroInput)) { heroInput.focus(); } else {
-        goHome();
-        setTimeout(() => document.getElementById('heroInput').focus(), 100);
-    }
-    updateActiveNav('navSearch');
-}
 function searchFromHero() { const q = document.getElementById('heroInput').value; if(q) fetchHadith(q); }
 function searchFromHeader() { const q = document.getElementById('headerInput').value; if(q) fetchHadith(q); }
 
@@ -162,15 +167,10 @@ async function shareCard(card) {
     const btns = card.querySelectorAll('button');
     const watermark = document.createElement('div');
     watermark.className = 'watermark';
-    
-    // === UPDATED WATERMARK TEXT ===
     watermark.innerText = "Read at aftab7xt.github.io/DeenBase/";
-    
     card.appendChild(watermark);
     watermark.style.display = 'block';
-    
     btns.forEach(b => b.style.display = 'none');
-
     try {
         const bgColor = getComputedStyle(document.body).getPropertyValue('--card-bg');
         const canvas = await html2canvas(card, { backgroundColor: bgColor, scale: 2 });
@@ -179,7 +179,6 @@ async function shareCard(card) {
         link.href = canvas.toDataURL();
         link.click();
     } catch(err) { alert("Could not create image"); }
-    
     btns.forEach(b => b.style.display = 'block');
     watermark.remove();
 }
@@ -216,6 +215,28 @@ async function fetchHadith(query, pushHistory = true) {
             if(pushHistory) history.pushState({query: query}, "", "#" + query);
         } else { display.innerHTML = "<p style='text-align:center; margin-top:20px;'>No Hadiths found.</p>"; }
     } catch (e) { loader.classList.add('hidden'); display.innerHTML = "<p style='text-align:center; margin-top:20px;'>Connection Error.</p>"; }
+}
+
+function renderCompactList(data, query) {
+    const display = document.getElementById('display');
+    display.innerHTML = `<div class='results-info'>Found ${data.length} results for "${query}"</div>`;
+    const list = document.createElement('div');
+    list.style.cssText = "border-radius:20px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);";
+    data.forEach(h => {
+        const item = document.createElement('div');
+        item.className = 'compact-card';
+        let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
+        if(preview.length > 120) preview = preview.substring(0, 120) + "...";
+        item.innerHTML = `<div class="compact-header"><span>Sahih Al-Bukhari - ${h.hadithNumber}</span><span>➔</span></div><div class="compact-preview">${preview}</div>`;
+        item.onclick = () => { display.innerHTML=""; renderFullCard(h); window.scrollTo(0,0); };
+        list.appendChild(item);
+    });
+    display.appendChild(list);
+    const btn = document.createElement('button');
+    btn.className = "back-home-btn";
+    btn.innerText = "← Back to Home";
+    btn.onclick = () => goHome();
+    display.appendChild(btn);
 }
 
 function renderFullCard(h) {
@@ -255,7 +276,6 @@ async function loadDailyHadith() {
     const shortHadithIDs = [1, 9, 13, 16, 33, 47, 50, 600, 6136, 6412];
     const today = new Date().getDate();
     const idToLoad = shortHadithIDs[today % shortHadithIDs.length];
-
     try {
         const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&hadithNumber=${idToLoad}`;
         const response = await fetch(url);

@@ -2,6 +2,7 @@ const apiKey = "$2y$10$83tRfHskMMReLlAtJiFNeQ5SO7xAxYwgGHIDxhLI4HPW8nRJP15";
 let homeHTML = ""; 
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+let currentHadithForNote = null;
 
 window.onload = function() {
     const display = document.getElementById('display');
@@ -51,12 +52,10 @@ function goHome(pushHistory = true) {
 // === SEARCH LOGIC ===
 function focusSearch() {
     const display = document.getElementById('display');
-    // If welcome screen exists, we are on Home. Focus Hero Input.
     if(display.querySelector('.welcome-screen')) {
         document.getElementById('heroInput').focus();
         window.scrollTo(0,0);
     } else {
-        // We are on a results page. Focus Header Input.
         document.getElementById('headerInput').focus();
     }
     updateActiveNav('navSearch');
@@ -83,6 +82,378 @@ function showHistory(context) {
 }
 function clearHistory() {
     searchHistory = [];
+    localStorage.removeItem('searchHistory');
+    document.querySelectorAll('.history-dropdown').forEach(el => el.classList.add('hidden'));
+    triggerHaptic();
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-container') && !e.target.closest('.hero-search-container')) {
+        document.querySelectorAll('.history-dropdown').forEach(el => el.classList.add('hidden'));
+    }
+});
+
+function searchFromHero() { const q = document.getElementById('heroInput').value; if(q) fetchHadith(q); }
+function searchFromHeader() { const q = document.getElementById('headerInput').value; if(q) fetchHadith(q); }
+
+// === SETTINGS ===
+function toggleTheme() {
+    const doc = document.documentElement;
+    const target = doc.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    doc.setAttribute('data-theme', target);
+    localStorage.setItem('theme', target);
+    triggerHaptic();
+}
+function updateFonts() {
+    const a = document.getElementById('arabicSlider').value;
+    const e = document.getElementById('engSlider').value;
+    document.documentElement.style.setProperty('--arabic-sz', a + 'px');
+    document.documentElement.style.setProperty('--trans-sz', e + 'px');
+    localStorage.setItem('arabicSize', a);
+    localStorage.setItem('engSize', e);
+}
+function loadFonts() {
+    const a = localStorage.getItem('arabicSize');
+    const e = localStorage.getItem('engSize');
+    if(a) { document.documentElement.style.setProperty('--arabic-sz', a + 'px'); document.getElementById('arabicSlider').value = a; }
+    if(e) { document.documentElement.style.setProperty('--trans-sz', e + 'px'); document.getElementById('engSlider').value = e; }
+}
+
+// === NOTES FUNCTIONALITY ===
+function openNotesModal(hadithObj) {
+    currentHadithForNote = hadithObj;
+    const modal = document.getElementById('notesModal');
+    const textarea = document.getElementById('notesTextarea');
+    
+    const existingNote = getHadithNote(hadithObj.hadithNumber);
+    textarea.value = existingNote || '';
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => textarea.focus(), 100);
+    triggerHaptic();
+}
+
+function closeNotesModal() {
+    document.getElementById('notesModal').classList.add('hidden');
+    document.getElementById('notesTextarea').value = '';
+    currentHadithForNote = null;
+    triggerHaptic();
+}
+
+function saveNote() {
+    if (!currentHadithForNote) return;
+    
+    const note = document.getElementById('notesTextarea').value.trim();
+    const hadithNumber = currentHadithForNote.hadithNumber;
+    
+    // Update favorites with note
+    const favIndex = favorites.findIndex(f => f.hadithNumber === hadithNumber);
+    if (favIndex !== -1) {
+        favorites[favIndex].note = note;
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+    }
+    
+    closeNotesModal();
+    showToast(note ? "Note saved!" : "Note removed!");
+    
+    // Refresh the display if we're viewing this hadith
+    const display = document.getElementById('display');
+    if (display.querySelector('.card')) {
+        renderFullCard(currentHadithForNote);
+    }
+}
+
+function getHadithNote(hadithNumber) {
+    const fav = favorites.find(f => f.hadithNumber === hadithNumber);
+    return fav ? fav.note : null;
+}
+
+// === FAVORITES ===
+function isFavorite(id) { return favorites.some(f => f.hadithNumber === id); }
+function toggleFavorite(btn, hadithObj) {
+    triggerHaptic();
+    if (isFavorite(hadithObj.hadithNumber)) {
+        favorites = favorites.filter(f => f.hadithNumber !== hadithObj.hadithNumber);
+        btn.innerHTML = "🤍"; 
+        showToast("Removed from Favorites");
+    } else {
+        hadithObj.note = ""; // Initialize empty note
+        favorites.push(hadithObj);
+        btn.innerHTML = "❤️"; 
+        showToast("Saved to Favorites");
+    }
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+}
+
+function showFavorites() {
+    updateActiveNav('navFav');
+    const display = document.getElementById('display');
+    if(favorites.length === 0) {
+        display.innerHTML = `<div style="text-align:center; margin-top:50px;"><h3>No Favorites Yet</h3><p>Tap the heart icon on any Hadith to save it here.</p><button class="back-home-btn" onclick="goHome()" style="text-align:center;">← Back to Home</button></div>`;
+        return;
+    }
+    display.innerHTML = `<h3 style="margin-bottom:20px; color:var(--primary);">Your Favorites (${favorites.length})</h3>`;
+    const listContainer = document.createElement('div');
+    listContainer.style.cssText = "border-radius:20px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);";
+    favorites.forEach(h => {
+        const item = document.createElement('div');
+        item.className = 'compact-card';
+        let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
+        if(preview.length > 80) preview = preview.substring(0, 80) + "...";
+        
+        let noteHTML = '';
+        if (h.note) {
+            noteHTML = `<div class="compact-note">📝 ${h.note}</div>`;
+        }
+        
+        item.innerHTML = `<div class="compact-header"><span>Sahih Al-Bukhari - ${h.hadithNumber}</span><span>❤️</span></div><div class="compact-preview">${preview}</div>${noteHTML}`;
+        item.onclick = () => { display.innerHTML=""; renderFullCard(h); window.scrollTo(0,0); };
+        listContainer.appendChild(item);
+    });
+    display.appendChild(listContainer);
+    const btn = document.createElement('button');
+    btn.className = "back-home-btn";
+    btn.innerText = "← Back to Home";
+    btn.onclick = () => goHome();
+    display.appendChild(btn);
+}
+
+// === SHARE AS IMAGE (ENHANCED) ===
+async function shareCard(card) {
+    triggerHaptic();
+    const btns = card.querySelectorAll('button');
+    const notesSection = card.querySelector('.notes-section');
+    const relatedSection = card.querySelector('.related-section');
+    
+    // Create enhanced watermark
+    const watermark = document.createElement('div');
+    watermark.className = 'share-watermark';
+    watermark.innerHTML = `
+        <div class="share-logo">📖 DeenBase</div>
+        <div class="share-url">aftab7xt.github.io/DeenBase</div>
+    `;
+    card.appendChild(watermark);
+    
+    // Hide interactive elements
+    btns.forEach(b => b.style.display = 'none');
+    if (notesSection) notesSection.style.display = 'none';
+    if (relatedSection) relatedSection.style.display = 'none';
+    
+    try {
+        const bgColor = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+        const canvas = await html2canvas(card, { 
+            backgroundColor: bgColor, 
+            scale: 3,
+            logging: false,
+            useCORS: true
+        });
+        
+        const link = document.createElement('a');
+        link.download = `deenbase-hadith-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.click();
+        
+        showToast("Image saved!");
+    } catch(err) { 
+        console.error(err);
+        alert("Could not create image"); 
+    }
+    
+    // Restore elements
+    btns.forEach(b => b.style.display = 'block');
+    if (notesSection) notesSection.style.display = 'block';
+    if (relatedSection) relatedSection.style.display = 'block';
+    watermark.remove();
+}
+
+// === RELATED HADITHS ===
+async function loadRelatedHadiths(currentHadith, container) {
+    try {
+        // Get a range of nearby hadiths
+        const currentNum = parseInt(currentHadith.hadithNumber);
+        const relatedNums = [];
+        
+        // Get 2 hadiths before and 2 after
+        for (let i = -2; i <= 2; i++) {
+            if (i !== 0) {
+                const num = currentNum + i;
+                if (num > 0 && num <= 7563) relatedNums.push(num);
+            }
+        }
+        
+        const relatedHadiths = [];
+        for (const num of relatedNums) {
+            try {
+                const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&hadithNumber=${num}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                if (result.hadiths && result.hadiths.data.length > 0) {
+                    relatedHadiths.push(result.hadiths.data[0]);
+                }
+            } catch(e) { console.log('Failed to load related:', num); }
+        }
+        
+        if (relatedHadiths.length > 0) {
+            const section = document.createElement('div');
+            section.className = 'related-section';
+            section.innerHTML = '<div class="related-title">📚 Related Hadiths</div>';
+            
+            relatedHadiths.forEach(h => {
+                const relCard = document.createElement('div');
+                relCard.className = 'related-card';
+                let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, '');
+                if (preview.length > 100) preview = preview.substring(0, 100) + "...";
+                
+                relCard.innerHTML = `
+                    <div class="related-header">Sahih Al-Bukhari - ${h.hadithNumber}</div>
+                    <div class="related-preview">${preview}</div>
+                `;
+                relCard.onclick = () => {
+                    fetchHadith(h.hadithNumber.toString());
+                    window.scrollTo(0, 0);
+                };
+                section.appendChild(relCard);
+            });
+            
+            container.appendChild(section);
+        }
+    } catch(e) {
+        console.error('Error loading related hadiths:', e);
+    }
+}
+
+async function fetchHadith(query, pushHistory = true) {
+    saveHistory(query);
+    triggerHaptic();
+    const display = document.getElementById('display');
+    const loader = document.getElementById('loader');
+    const headerSearch = document.getElementById('headerSearch');
+    const headerInput = document.getElementById('headerInput');
+    display.innerHTML = ""; 
+    loader.classList.remove('hidden'); 
+    headerSearch.classList.remove('hidden'); 
+    headerInput.value = query; 
+    document.querySelectorAll('.history-dropdown').forEach(el => el.classList.add('hidden'));
+    
+    const isNumber = !isNaN(query);
+    const param = isNumber ? `hadithNumber=${query}` : `paginate=200`;
+    
+    try {
+        const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&${param}`;
+        const response = await fetch(url);
+        const result = await response.json();
+        loader.classList.add('hidden');
+        if (result.hadiths && result.hadiths.data.length > 0) {
+            if (isNumber) renderFullCard(result.hadiths.data[0]);
+            else {
+                const lower = query.toLowerCase();
+                const filtered = result.hadiths.data.filter(h => h.hadithEnglish.toLowerCase().includes(lower));
+                if (filtered.length > 0) renderCompactList(filtered, query);
+                else display.innerHTML = "<p style='text-align:center; margin-top:20px;'>No matches found.</p>";
+            }
+            if(pushHistory) history.pushState({query: query}, "", "#" + query);
+        } else { display.innerHTML = "<p style='text-align:center; margin-top:20px;'>No Hadiths found.</p>"; }
+    } catch (e) { loader.classList.add('hidden'); display.innerHTML = "<p style='text-align:center; margin-top:20px;'>Connection Error.</p>"; }
+}
+
+function renderCompactList(data, query) {
+    const display = document.getElementById('display');
+    display.innerHTML = `<div class='results-info'>Found ${data.length} results for "${query}"</div>`;
+    const list = document.createElement('div');
+    list.style.cssText = "border-radius:20px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);";
+    data.forEach(h => {
+        const item = document.createElement('div');
+        item.className = 'compact-card';
+        let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
+        if(preview.length > 120) preview = preview.substring(0, 120) + "...";
+        item.innerHTML = `<div class="compact-header"><span>Sahih Al-Bukhari - ${h.hadithNumber}</span><span>➔</span></div><div class="compact-preview">${preview}</div>`;
+        item.onclick = () => { display.innerHTML=""; renderFullCard(h); window.scrollTo(0,0); };
+        list.appendChild(item);
+    });
+    display.appendChild(list);
+    const btn = document.createElement('button');
+    btn.className = "back-home-btn";
+    btn.innerText = "← Back to Home";
+    btn.onclick = () => goHome();
+    display.appendChild(btn);
+}
+
+function renderFullCard(h) {
+    const display = document.getElementById('display');
+    const shareText = `Sahih Bukhari ${h.hadithNumber}\n\n${h.hadithEnglish}`;
+    const grade = h.status ? h.status : "Sahih"; 
+    const favIcon = isFavorite(h.hadithNumber) ? "❤️" : "🤍";
+    const card = document.createElement('div');
+    card.className = 'card';
+    
+    const existingNote = getHadithNote(h.hadithNumber);
+    const notesHTML = existingNote ? `
+        <div class="notes-section">
+            <div class="notes-header">
+                <div class="notes-title">📝 Your Notes</div>
+                <button class="notes-edit-btn" onclick='openNotesModal(${JSON.stringify(h).replace(/'/g, "&apos;")})'>Edit</button>
+            </div>
+            <div class="notes-text">${existingNote}</div>
+        </div>
+    ` : `
+        <button class="add-notes-btn" onclick='openNotesModal(${JSON.stringify(h).replace(/'/g, "&apos;")})'>
+            📝 Add Personal Notes
+        </button>
+    `;
+    
+    card.innerHTML = `
+        <div class="card-top-actions">
+            <div><div class="hadith-header">Sahih Al-Bukhari - ${h.hadithNumber}</div><div class="hadith-grade">Grade: <span class="grade-badge">${grade}</span></div></div>
+            <button class="fav-btn">${favIcon}</button>
+        </div>
+        <p class="arabic">${h.hadithArabic}</p>
+        <div class="lang-toggle"><span class="tab-eng active">English</span><span class="tab-urdu">Urdu</span></div>
+        <div class="trans-content"><p class="trans-text content-eng">${h.hadithEnglish}</p><p class="trans-text content-urdu hidden urdu-font" style="direction:rtl; text-align:right;">${h.hadithUrdu}</p></div>
+        ${notesHTML}
+        <div class="action-row"><button class="copy-btn">📋 Copy</button><button class="share-btn">📸 Share Image</button></div>
+        <button class="back-home-btn">← Back to Home</button>
+    `;
+    
+    const tabEng = card.querySelector('.tab-eng'); const tabUrdu = card.querySelector('.tab-urdu');
+    const contentEng = card.querySelector('.content-eng'); const contentUrdu = card.querySelector('.content-urdu');
+    tabEng.onclick = () => { tabEng.classList.add('active'); tabUrdu.classList.remove('active'); contentEng.classList.remove('hidden'); contentUrdu.classList.add('hidden'); triggerHaptic(); };
+    tabUrdu.onclick = () => { tabUrdu.classList.add('active'); tabEng.classList.remove('active'); contentUrdu.classList.remove('hidden'); contentEng.classList.add('hidden'); triggerHaptic(); };
+    card.querySelector('.copy-btn').onclick = () => { fallbackCopyText(shareText); triggerHaptic(); };
+    card.querySelector('.share-btn').onclick = () => shareCard(card);
+    card.querySelector('.back-home-btn').onclick = () => { goHome(); triggerHaptic(); };
+    card.querySelector('.fav-btn').onclick = (e) => toggleFavorite(e.target, h);
+    
+    display.appendChild(card);
+    
+    // Load related hadiths
+    loadRelatedHadiths(h, card);
+}
+
+async function loadDailyHadith() {
+    const dailySection = document.getElementById('dailySection');
+    const dailyCard = document.getElementById('dailyCard');
+    if(!dailySection || !dailyCard) return;
+    dailySection.classList.remove('hidden');
+    const shortHadithIDs = [1, 9, 13, 16, 33, 47, 50, 600, 6136, 6412];
+    const today = new Date().getDate();
+    const idToLoad = shortHadithIDs[today % shortHadithIDs.length];
+    try {
+        const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&hadithNumber=${idToLoad}`;
+        const response = await fetch(url);
+        const result = await response.json();
+        if (result.hadiths && result.hadiths.data.length > 0) {
+            const h = result.hadiths.data[0];
+            let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
+            if(preview.length > 150) preview = preview.substring(0, 150) + "...";
+            dailyCard.innerHTML = `<div class="daily-quote">"${preview}"</div><div class="daily-ref">Sahih Al-Bukhari - ${h.hadithNumber}</div>`;
+            dailyCard.onclick = () => fetchHadith(h.hadithNumber);
+        }
+    } catch (e) { dailyCard.innerHTML = "Failed to load."; }
+}
+
+function getRandomHadith() { fetchHadith(Math.floor(Math.random() * 7000) + 1); }
+function fallbackCopyText(text) {
+    const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
+    try { docum    searchHistory = [];
     localStorage.removeItem('searchHistory');
     document.querySelectorAll('.history-dropdown').forEach(el => el.classList.add('hidden'));
     triggerHaptic();

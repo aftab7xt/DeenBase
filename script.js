@@ -3,6 +3,27 @@ let homeHTML = "";
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
 
+// Bukhari has 97 Books. Listed major ones here for Explore.
+// You can expand this list later or fetch it dynamically if needed.
+const bukhariBooks = [
+    { id: 1, title: "Revelation" }, { id: 2, title: "Belief" }, { id: 3, title: "Knowledge" },
+    { id: 4, title: "Ablution" }, { id: 5, title: "Bathing (Ghusl)" }, { id: 6, title: "Menstrual Periods" },
+    { id: 7, title: "Rubbing hands and feet (Tayammum)" }, { id: 8, title: "Prayers (Salat)" },
+    { id: 9, title: "Virtues of Prayer" }, { id: 10, title: "Call to Prayer (Adhan)" },
+    { id: 11, title: "Friday Prayer" }, { id: 12, title: "Fear Prayer" },
+    { id: 13, title: "Two Eids" }, { id: 14, title: "Witr Prayer" },
+    { id: 15, title: "Invoking Allah for Rain" }, { id: 16, title: "Eclipses" },
+    { id: 17, title: "Prostration of Quran" }, { id: 18, title: "Shortening Prayers" },
+    { id: 19, title: "Night Prayer (Tahajjud)" }, { id: 20, title: "Virtues of Prayer in Makkah/Madinah" },
+    { id: 21, title: "Actions while Praying" }, { id: 22, title: "Forgetfulness in Prayer" },
+    { id: 23, title: "Funerals (Al-Janaa'iz)" }, { id: 24, title: "Zakat (Charity)" },
+    { id: 25, title: "Hajj (Pilgrimage)" }, { id: 26, title: "Umrah" },
+    { id: 27, title: "Pilgrims Prevented" }, { id: 28, title: "Penalty of Hunting" },
+    { id: 29, title: "Virtues of Madinah" }, { id: 30, title: "Fasting (Saum)" },
+    { id: 31, title: "Tarawih Prayers" }, { id: 32, title: "Virtues of the Night of Qadr" },
+    { id: 33, title: "Retiring to a Mosque for Remembrance (I'tikaf)" }, { id: 34, title: "Sales and Trade" }
+];
+
 window.onload = function() {
     const display = document.getElementById('display');
     homeHTML = display.innerHTML;
@@ -13,28 +34,38 @@ window.onload = function() {
     loadFonts();
     loadDailyHadith();
     const hash = window.location.hash.substring(1);
-    if(hash) fetchHadith(decodeURIComponent(hash));
+    if(hash) {
+        if(hash.startsWith('book-')) {
+            // Handle direct link to a book
+            const bookId = hash.replace('book-', '');
+            // Find title for header (optional, or fetch fresh)
+            const book = bukhariBooks.find(b => b.id == bookId);
+            fetchHadithsByBook(bookId, book ? book.title : 'Book ' + bookId, false);
+        } else {
+            fetchHadith(decodeURIComponent(hash));
+        }
+    }
 };
 
 window.onpopstate = function(event) {
     if (event.state) {
-        if(event.state.query) fetchHadith(event.state.query, false);
-        else if(event.state.bookId) fetchHadithsByBook(event.state.bookId, event.state.bookTitle, false);
+        if (event.state.query) fetchHadith(event.state.query, false);
+        else if (event.state.bookId) fetchHadithsByBook(event.state.bookId, event.state.bookTitle, false);
         else goHome(false);
     } else {
         goHome(false);
     }
 };
 
-// === NAVIGATION & UI ===
+// === HAPTIC & NAV ===
 function triggerHaptic() { if (navigator.vibrate) navigator.vibrate(10); }
-
 function updateActiveNav(id) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     triggerHaptic();
 }
 
+// === MENU TOGGLE ===
 function toggleMenu() {
     document.getElementById('sideMenu').classList.toggle('open');
     document.getElementById('menuOverlay').classList.toggle('open');
@@ -55,62 +86,36 @@ function goHome(pushHistory = true) {
     window.scrollTo(0,0);
 }
 
-// === EXPLORE FEATURE (FIXED) ===
-async function showExplore() {
+// === EXPLORE & BOOKS LOGIC (FIXED) ===
+function showExplore() {
     updateActiveNav('navExplore');
     const display = document.getElementById('display');
-    const loader = document.getElementById('loader');
     
-    display.innerHTML = ""; // Clear screen
-    loader.classList.remove('hidden'); // Show spinner
-
-    try {
-        // FETCH REAL BOOK LIST FROM API
-        // This endpoint returns the Kitabs (Books) of Bukhari
-        const url = `https://hadithapi.com/api/chapters?apiKey=${apiKey}&book=sahih-bukhari`;
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        loader.classList.add('hidden');
-
-        if (result && result.chapters) {
-            renderBooksList(result.chapters);
-        } else {
-            display.innerHTML = "<p style='text-align:center; margin-top:20px;'>Could not load books.</p>";
-        }
-    } catch (e) {
-        loader.classList.add('hidden');
-        display.innerHTML = "<p style='text-align:center; margin-top:20px;'>Connection Error.</p>";
-    }
-}
-
-function renderBooksList(books) {
-    const display = document.getElementById('display');
+    // Generate Grid of Books
     let booksHTML = "";
-    
-    books.forEach(book => {
-        // API returns: { chapterNumber: "1", chapterTitle: "Revelation" }
+    bukhariBooks.forEach(book => {
         booksHTML += `
-            <div class="book-card" onclick="fetchHadithsByBook('${book.chapterNumber}', '${book.chapterTitle.replace(/'/g, "\\'")}')">
-                <div class="book-number">Book ${book.chapterNumber}</div>
-                <div class="book-title">${book.chapterTitle}</div>
+            <div class="book-card" onclick="fetchHadithsByBook('${book.id}', '${book.title}')">
+                <div class="book-number">Book ${book.id}</div>
+                <div class="book-title">${book.title}</div>
             </div>
         `;
     });
 
     display.innerHTML = `
         <div id="exploreScreen">
-            <h3 style="margin: 20px 0 15px 0; color:var(--primary); font-family: 'Zalando Sans SemiExpanded', sans-serif;">Browse Sahih Al-Bukhari</h3>
+            <h3 style="margin: 20px 0 15px 0; color:var(--primary); font-family: 'Zalando Sans SemiExpanded', sans-serif;">Browse by Books</h3>
             <div class="books-grid">
                 ${booksHTML}
             </div>
             <button class="back-home-btn" onclick="goHome()">← Back to Home</button>
         </div>
     `;
+    
     window.scrollTo(0,0);
+    triggerHaptic();
 }
 
-// === FETCH HADITHS BY BOOK (NEW) ===
 async function fetchHadithsByBook(bookId, bookTitle, pushHistory = true) {
     const display = document.getElementById('display');
     const loader = document.getElementById('loader');
@@ -118,19 +123,17 @@ async function fetchHadithsByBook(bookId, bookTitle, pushHistory = true) {
     
     display.innerHTML = "";
     loader.classList.remove('hidden');
-    headerSearch.classList.remove('hidden'); // Show header search so they can search within results if needed
+    headerSearch.classList.remove('hidden'); // Show header search to allow filtering
     
+    // NOTE: 'chapter' param in this API corresponds to the Book ID (Kitab)
+    const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&chapter=${bookId}&paginate=300`; // Limit to 300 for performance
+
     try {
-        // USE 'chapter' PARAMETER TO FILTER BY BOOK ID
-        // In this API: 'book'=Collection, 'chapter'=Kitab/Book
-        const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&chapter=${bookId}&paginate=1000`;
         const response = await fetch(url);
         const result = await response.json();
-        
         loader.classList.add('hidden');
 
         if (result.hadiths && result.hadiths.data.length > 0) {
-            // Render the list of Hadiths for this Book
             renderBookContents(result.hadiths.data, bookTitle);
             
             if(pushHistory) {
@@ -148,12 +151,12 @@ async function fetchHadithsByBook(bookId, bookTitle, pushHistory = true) {
 function renderBookContents(data, title) {
     const display = document.getElementById('display');
     
-    // Header for the Book
+    // Book Header
     const headerHtml = `
-        <div style="margin-bottom:20px;">
-            <div style="font-size:12px; color:var(--secondary-text); text-transform:uppercase; letter-spacing:1px;">Book:</div>
-            <h2 style="margin:5px 0; color:var(--primary); font-family:'Zalando Sans SemiExpanded', sans-serif;">${title}</h2>
-            <div style="font-size:13px; opacity:0.7;">${data.length} Hadiths</div>
+        <div style="margin-bottom:20px; padding: 0 5px;">
+            <div style="font-size:12px; color:var(--secondary-text); text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Book of</div>
+            <h2 style="margin:0; color:var(--primary); font-family:'Zalando Sans SemiExpanded', sans-serif; font-size: 22px;">${title}</h2>
+            <div style="font-size:13px; opacity:0.7; margin-top:5px;">${data.length} Hadiths</div>
         </div>
     `;
 
@@ -168,7 +171,7 @@ function renderBookContents(data, title) {
         
         item.innerHTML = `
             <div class="compact-header">
-                <span>Hadith #${h.hadithNumber}</span>
+                <span>Hadith ${h.hadithNumber}</span>
                 <span style="opacity:0.5;">➔</span>
             </div>
             <div class="compact-preview">${preview}</div>
@@ -182,14 +185,12 @@ function renderBookContents(data, title) {
     
     const btn = document.createElement('button');
     btn.className = "back-home-btn";
-    btn.innerText = "← Back to Explore";
-    btn.onclick = () => showExplore(); // Go back to book list
+    btn.innerText = "← Back to Books";
+    btn.onclick = () => showExplore();
     display.appendChild(btn);
 }
 
-// === EXISTING SEARCH & CORE LOGIC ===
-// (Keep saveHistory, showHistory, clearHistory, focusSearch, searchFromHero, searchFromHeader, toggleTheme, updateFonts, loadFonts, isFavorite, toggleFavorite, showFavorites, shareCard, renderFullCard, loadDailyHadith, getRandomHadith, fallbackCopyText, showToast logic exactly as before)
-
+// === SEARCH HISTORY ===
 function saveHistory(query) {
     if(!query) return;
     searchHistory = searchHistory.filter(item => item !== query);
@@ -219,9 +220,11 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// === SEARCH LOGIC ===
 function focusSearch() {
     const heroInput = document.getElementById('heroInput');
     const headerSearch = document.getElementById('headerSearch');
+
     if (document.body.contains(heroInput)) {
         heroInput.focus();
         window.scrollTo(0, 0);
@@ -241,6 +244,7 @@ function focusSearch() {
 function searchFromHero() { const q = document.getElementById('heroInput').value; if(q) fetchHadith(q); }
 function searchFromHeader() { const q = document.getElementById('headerInput').value; if(q) fetchHadith(q); }
 
+// === SETTINGS ===
 function toggleTheme() {
     const doc = document.documentElement;
     const target = doc.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -263,6 +267,7 @@ function loadFonts() {
     if(e) { document.documentElement.style.setProperty('--trans-sz', e + 'px'); document.getElementById('engSlider').value = e; }
 }
 
+// === FAVORITES SYSTEM ===
 function isFavorite(id) { return favorites.some(f => f.hadithNumber === id); }
 function toggleFavorite(btn, hadithObj) {
     triggerHaptic();
@@ -304,6 +309,7 @@ function showFavorites() {
     display.appendChild(btn);
 }
 
+// === SHARE AS IMAGE ===
 async function shareCard(card) {
     triggerHaptic();
     const btns = card.querySelectorAll('button');
@@ -419,12 +425,3 @@ async function loadDailyHadith() {
     const today = new Date().getDate();
     const idToLoad = shortHadithIDs[today % shortHadithIDs.length];
     try {
-        const url = `https://hadithapi.com/api/hadiths?apiKey=${apiKey}&book=sahih-bukhari&hadithNumber=${idToLoad}`;
-        const response = await fetch(url);
-        const result = await response.json();
-        if (result.hadiths && result.hadiths.data.length > 0) {
-            const h = result.hadiths.data[0];
-            let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, ''); 
-            if(preview.length > 150) preview = preview.substring(0, 150) + "...";
-            dailyCard.innerHTML = `<div class="daily-quote">"${preview}"</div><div class="daily-ref">Sahih Al-Bukhari - ${h.hadithNumber}</div>`;
-           

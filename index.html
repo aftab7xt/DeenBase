@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <title>DeenBase | Authentic Islamic Knowledge</title>
-    <meta name="description" content="DeenBase is your digital hub for authentic Islamic knowledge.">
-    <meta name="theme-color" content="#2563EB">
+    <meta name="description" content="DeenBase is your digital hub for authentic Islamic knowledge. Search, read, and save Hadiths, starting with Sahih Al-Bukhari.">
+    <meta name="theme-color" content="#1C4D8D">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zalando+Sans+SemiExpanded:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Inter:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -28,9 +29,9 @@
         </div>
 
         <div class="search-container header-search hidden" id="headerSearch">
-            <input type="text" id="headerInput" placeholder="Search Hadith # or Topic..." onfocus="showHistory()" autocomplete="off">
+            <input type="text" id="headerInput" placeholder="Search Hadith # or Keyword..." onfocus="showHistory('header')" autocomplete="off">
             <button onclick="searchFromHeader()">Search</button>
-            <div id="searchHistory" class="history-dropdown hidden"></div>
+            <div id="headerHistory" class="history-dropdown hidden"></div>
         </div>
     </div>
 
@@ -39,22 +40,27 @@
             <span>DeenBase Menu</span>
             <button onclick="toggleMenu()" class="close-btn">✕</button>
         </div>
+
         <div class="menu-content">
             <div class="menu-item" onclick="showFavorites(); toggleMenu()">
-                <span class="menu-icon">❤️</span> <span>Saved Hadiths</span>
+                <span class="menu-icon">❤️</span>
+                <span>Saved Hadiths</span>
             </div>
+
             <div class="menu-item" onclick="toggleTheme()">
-                <span class="menu-icon">🌓</span> <span>Dark Mode</span>
+                <span class="menu-icon">🌓</span>
+                <span>Dark Mode</span>
             </div>
+
             <div class="menu-section">
                 <div class="section-title">Reading Preferences</div>
                 <div class="slider-group">
                     <label>Arabic Text Size</label>
-                    <input type="range" min="18" max="40" value="24" id="arabicSlider" oninput="updateFonts()">
+                    <input type="range" min="18" max="40" value="22" id="arabicSlider" oninput="updateFonts()">
                 </div>
                 <div class="slider-group">
                     <label>English Text Size</label>
-                    <input type="range" min="12" max="24" value="16" id="engSlider" oninput="updateFonts()">
+                    <input type="range" min="12" max="24" value="15" id="engSlider" oninput="updateFonts()">
                 </div>
             </div>
         </div>
@@ -63,27 +69,59 @@
 
     <div id="display">
         <div class="welcome-screen" id="welcomeScreen">
-            <div class="greeting-area">
-                <div class="greeting-sub arabic-greeting">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</div>
-                <h1 class="greeting-main">DeenBase</h1>
-                <p style="color:var(--secondary-text); margin-top:5px; font-size:14px;">Your Authentic Islamic Knowledge Hub</p>
+            <div class="icon">📖</div>
+            <h3>DeenBase</h3>
+            <p>Your Authentic Islamic Knowledge Hub</p>
+            
+            <div class="hero-search-container">
+                <input type="text" id="heroInput" placeholder="Search (e.g. 'Prayer' or '1')" onfocus="showHistory('hero')" autocomplete="off">
+                <button onclick="searchFromHero()">Search</button>
+                <div id="heroHistory" class="history-dropdown hidden"></div>
             </div>
 
-            <div class="topics-scroller">
-                <div class="topic-chip" onclick="fetchHadith('Prayer')">Prayer</div>
-                <div class="topic-chip" onclick="fetchHadith('Fasting')">Fasting</div>
-                <div class="topic-chip" onclick="fetchHadith('Charity')">Charity</div>
-                <div class="topic-chip" onclick="fetchHadith('Patience')">Patience</div>
-                <div class="topic-chip" onclick="fetchHadith('Manners')">Manners</div>
-                <div class="topic-chip" onclick="fetchHadith('Knowledge')">Knowledge</div>
+            <div class="home-actions">
+                <button class="action-btn" onclick="getRandomHadith()">✨ Read Random Hadith</button>
             </div>
 
             <div class="daily-hadith-section hidden" id="dailySection">
-                <div class="daily-section-title">✨ Daily Wisdom</div>
+                <div class="daily-label">Daily Wisdom</div>
                 <div class="daily-card" id="dailyCard">
                     <div class="daily-spinner"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="loader" class="loader-container hidden">
+        <div class="ios-spinner">
+            <div class="bar bar1"></div><div class="bar bar2"></div><div class="bar bar3"></div><div class="bar bar4"></div>
+            <div class="bar bar5"></div><div class="bar bar6"></div><div class="bar bar7"></div><div class="bar bar8"></div>
+            <div class="bar bar9"></div><div class="bar bar10"></div><div class="bar bar11"></div><div class="bar bar12"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="goHome()" id="navHome">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" onclick="focusSearch()" id="navSearch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Search</span>
+        </div>
+        <div class="nav-item" onclick="showFavorites()" id="navFav">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span>Saved</span>
+        </div>
+        <div class="nav-item" onclick="toggleMenu()" id="navMenu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span>Menu</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
             
             <div class="home-actions">
                 <button class="action-btn" onclick="getRandomHadith()">✨ Read Random Hadith</button>

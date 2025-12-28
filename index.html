@@ -23,6 +23,21 @@
 
     <div id="toast">Copied to Clipboard!</div>
 
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Your Notes</h3>
+                <button class="modal-close" onclick="closeNotesModal()">✕</button>
+            </div>
+            <textarea id="notesTextarea" placeholder="Write your personal notes, reflections, or reminders about this Hadith..."></textarea>
+            <div class="modal-actions">
+                <button class="modal-btn cancel-btn" onclick="closeNotesModal()">Cancel</button>
+                <button class="modal-btn save-btn" onclick="saveNote()">Save Note</button>
+            </div>
+        </div>
+    </div>
+
     <div class="header">
         <div class="header-top-row">
             <h2 class="logo" onclick="goHome()">DeenBase</h2>
@@ -83,6 +98,45 @@
                 <button class="action-btn" onclick="getRandomHadith()">✨ Read Random Hadith</button>
             </div>
 
+            <div class="daily-hadith-section hidden" id="dailySection">
+                <div class="daily-label">Daily Wisdom</div>
+                <div class="daily-card" id="dailyCard">
+                    <div class="daily-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loader" class="loader-container hidden">
+        <div class="ios-spinner">
+            <div class="bar bar1"></div><div class="bar bar2"></div><div class="bar bar3"></div><div class="bar bar4"></div>
+            <div class="bar bar5"></div><div class="bar bar6"></div><div class="bar bar7"></div><div class="bar bar8"></div>
+            <div class="bar bar9"></div><div class="bar bar10"></div><div class="bar bar11"></div><div class="bar bar12"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="goHome()" id="navHome">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" onclick="focusSearch()" id="navSearch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Search</span>
+        </div>
+        <div class="nav-item" onclick="showFavorites()" id="navFav">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span>Saved</span>
+        </div>
+        <div class="nav-item" onclick="toggleMenu()" id="navMenu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span>Menu</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
             <div class="daily-hadith-section hidden" id="dailySection">
                 <div class="daily-label">Daily Wisdom</div>
                 <div class="daily-card" id="dailyCard">

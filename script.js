@@ -132,6 +132,9 @@ function updateFonts() {
     const arabic = document.getElementById('arabicSlider').value;
     const english = document.getElementById('engSlider').value;
     
+    document.getElementById('arabicValue').textContent = arabic + 'px';
+    document.getElementById('engValue').textContent = english + 'px';
+    
     document.querySelectorAll('.arabic').forEach(el => {
         el.style.fontSize = arabic + 'px';
     });
@@ -145,22 +148,21 @@ function updateFonts() {
 }
 
 function loadFonts() {
-    const arabic = localStorage.getItem('arabicSize');
-    const english = localStorage.getItem('engSize');
+    const arabic = localStorage.getItem('arabicSize') || '22';
+    const english = localStorage.getItem('engSize') || '15';
     
-    if (arabic) {
-        document.getElementById('arabicSlider').value = arabic;
-        document.querySelectorAll('.arabic').forEach(el => {
-            el.style.fontSize = arabic + 'px';
-        });
-    }
+    document.getElementById('arabicSlider').value = arabic;
+    document.getElementById('engSlider').value = english;
+    document.getElementById('arabicValue').textContent = arabic + 'px';
+    document.getElementById('engValue').textContent = english + 'px';
     
-    if (english) {
-        document.getElementById('engSlider').value = english;
-        document.querySelectorAll('.trans-text').forEach(el => {
-            el.style.fontSize = english + 'px';
-        });
-    }
+    document.querySelectorAll('.arabic').forEach(el => {
+        el.style.fontSize = arabic + 'px';
+    });
+    
+    document.querySelectorAll('.trans-text').forEach(el => {
+        el.style.fontSize = english + 'px';
+    });
 }
 
 function openNotesModal(hadithNumber) {

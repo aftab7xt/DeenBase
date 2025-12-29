@@ -499,6 +499,9 @@ function renderFullCard(h) {
     const favIcon = isFavorite(h.hadithNumber) ? "❤️" : "🤍";
     const isFav = isFavorite(h.hadithNumber);
     
+    // Hide header search when viewing hadith
+    document.getElementById('headerSearch').classList.add('hidden');
+    
     const card = document.createElement('div');
     card.className = 'card';
     

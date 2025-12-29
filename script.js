@@ -312,7 +312,10 @@ async function shareCard(card) {
         const canvas = await html2canvas(card, {
             scale: 3,
             logging: false,
-            useCORS: true
+            useCORS: true,
+            backgroundColor: '#1e293b',
+            windowWidth: card.scrollWidth,
+            windowHeight: card.scrollHeight
         });
         
         const link = document.createElement('a');

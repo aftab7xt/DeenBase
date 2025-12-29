@@ -112,8 +112,8 @@ body {
 }
 
 .search-icon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     color: var(--text-secondary);
     margin-left: 8px;
     flex-shrink: 0;
@@ -459,9 +459,15 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .hero-content .icon {
-    font-size: 72px;
+    font-size: 64px;
     margin-bottom: 20px;
     animation: fadeIn 0.6s ease;
+}
+
+/* Prevent any large decorative icons */
+.welcome-screen > .icon,
+.welcome-screen .large-icon {
+    display: none !important;
 }
 
 .hero-content h2 {

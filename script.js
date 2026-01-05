@@ -24,7 +24,7 @@ window.onload = function() {
 
 function triggerHaptic() {
     if (navigator.vibrate) {
-        navigator.vibrate(10);
+        navigator.vibrate(15); // Slightly longer for iOS feel
     }
 }
 
@@ -32,7 +32,8 @@ function updateActiveNav(id) {
     document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.remove('active');
     });
-    document.getElementById(id).classList.add('active');
+    const activeItem = document.getElementById(id);
+    if(activeItem) activeItem.classList.add('active');
     triggerHaptic();
 }
 
@@ -44,23 +45,27 @@ function toggleMenu() {
 
 function goHome() {
     const display = document.getElementById('display');
-    display.innerHTML = homeHTML;
-    document.getElementById('headerSearch').classList.add('hidden');
-    document.getElementById('loader').classList.add('hidden');
-    loadDailyHadith();
-    updateActiveNav('navHome');
-    history.pushState(null, "", window.location.pathname);
-    window.scrollTo(0, 0);
+    display.style.opacity = '0';
+    setTimeout(() => {
+        display.innerHTML = homeHTML;
+        display.style.opacity = '1';
+        document.getElementById('headerSearch').classList.add('hidden');
+        document.getElementById('loader').classList.add('hidden');
+        loadDailyHadith();
+        updateActiveNav('navHome');
+        history.pushState(null, "", window.location.pathname);
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }, 200);
 }
 
 function focusSearch() {
+    updateActiveNav('navSearch');
     const display = document.getElementById('display');
     if (display.querySelector('.welcome-screen')) {
         document.getElementById('heroInput').focus();
     } else {
         document.getElementById('headerInput').focus();
     }
-    updateActiveNav('navSearch');
     triggerHaptic();
 }
 
@@ -123,6 +128,9 @@ function toggleTheme() {
     const doc = document.documentElement;
     const current = doc.getAttribute('data-theme');
     const target = current === 'dark' ? 'light' : 'dark';
+    
+    // Smooth transition for theme change
+    document.body.style.transition = "all 0.5s ease";
     doc.setAttribute('data-theme', target);
     localStorage.setItem('theme', target);
     triggerHaptic();
@@ -148,13 +156,18 @@ function updateFonts() {
 }
 
 function loadFonts() {
-    const arabic = localStorage.getItem('arabicSize') || '22';
-    const english = localStorage.getItem('engSize') || '15';
+    const arabic = localStorage.getItem('arabicSize') || '26';
+    const english = localStorage.getItem('engSize') || '17';
     
-    document.getElementById('arabicSlider').value = arabic;
-    document.getElementById('engSlider').value = english;
-    document.getElementById('arabicValue').textContent = arabic + 'px';
-    document.getElementById('engValue').textContent = english + 'px';
+    const aS = document.getElementById('arabicSlider');
+    const eS = document.getElementById('engSlider');
+    if(aS) aS.value = arabic;
+    if(eS) eS.value = english;
+    
+    const aV = document.getElementById('arabicValue');
+    const eV = document.getElementById('engValue');
+    if(aV) aV.textContent = arabic + 'px';
+    if(eV) eV.textContent = english + 'px';
     
     document.querySelectorAll('.arabic').forEach(el => {
         el.style.fontSize = arabic + 'px';
@@ -175,7 +188,7 @@ function openNotesModal(hadithNumber) {
     
     textarea.value = hadith.note || '';
     modal.classList.remove('hidden');
-    setTimeout(() => textarea.focus(), 100);
+    setTimeout(() => textarea.focus(), 300);
     triggerHaptic();
 }
 
@@ -234,31 +247,30 @@ function showFavorites() {
     
     if (favorites.length === 0) {
         display.innerHTML = `
-            <div style="text-align:center; margin-top:50px;">
+            <div style="text-align:center; margin-top:50px; animation: slideUpFade 0.5s ease;">
+                <div style="font-size:60px; margin-bottom:20px;">📂</div>
                 <h3>No Favorites Yet</h3>
-                <p>Tap the heart icon on any Hadith to save it here.</p>
+                <p style="color:var(--text-secondary);">Your collection is empty.</p>
                 <button class="back-home-btn" onclick="goHome()">← Back to Home</button>
             </div>
         `;
         return;
     }
     
-    display.innerHTML = `<h3 style="margin-bottom:20px; color:var(--primary);">Your Favorites (${favorites.length})</h3>`;
+    display.innerHTML = `<h3 style="margin-bottom:20px; font-size:24px;">Your Favorites</h3>`;
     
     const container = document.createElement('div');
-    container.style.cssText = "border:1px solid var(--border); border-radius:12px; overflow:hidden;";
+    container.style.cssText = "border:1px solid var(--border); border-radius:18px; overflow:hidden; background:var(--card); backdrop-filter:blur(10px);";
     
-    favorites.forEach(h => {
+    favorites.forEach((h, index) => {
         const card = document.createElement('div');
         card.className = 'compact-card';
+        card.style.animationDelay = (index * 0.05) + 's';
         
         let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, '');
         if (preview.length > 80) preview = preview.substring(0, 80) + "...";
         
-        let noteHTML = '';
-        if (h.note) {
-            noteHTML = `<div class="compact-note">📝 ${h.note}</div>`;
-        }
+        let noteHTML = h.note ? `<div class="compact-note">📝 ${h.note}</div>` : '';
         
         card.innerHTML = `
             <div class="compact-header">
@@ -272,7 +284,7 @@ function showFavorites() {
         card.onclick = () => {
             display.innerHTML = "";
             renderFullCard(h);
-            window.scrollTo(0, 0);
+            window.scrollTo({top: 0, behavior: 'smooth'});
         };
         
         container.appendChild(card);
@@ -289,115 +301,65 @@ function showFavorites() {
 
 async function shareCard(card) {
     triggerHaptic();
-    
-    const buttons = card.querySelectorAll('button');
-    const notesSection = card.querySelector('.notes-section');
-    const relatedSection = card.querySelector('.related-section');
-    const addNotesBtn = card.querySelector('.add-notes-btn');
-    
     const watermark = document.createElement('div');
     watermark.className = 'share-watermark';
-    watermark.innerHTML = `
-        <div class="share-logo">📖 DeenBase</div>
-        <div class="share-url">aftab7xt.github.io/DeenBase</div>
-    `;
+    watermark.innerHTML = `<div class="share-logo">📖 DeenBase</div><div class="share-url">aftab7xt.github.io/DeenBase</div>`;
     card.appendChild(watermark);
     
-    buttons.forEach(b => b.style.display = 'none');
-    if (notesSection) notesSection.style.display = 'none';
-    if (relatedSection) relatedSection.style.display = 'none';
-    if (addNotesBtn) addNotesBtn.style.display = 'none';
-    
+    const hideSelectors = ['.fav-btn', '.lang-toggle', '.action-row', '.back-home-btn', '.notes-edit-btn', '.add-notes-btn', '.related-section'];
+    hideSelectors.forEach(sel => {
+        const el = card.querySelector(sel);
+        if(el) el.style.display = 'none';
+    });
+
     try {
         const canvas = await html2canvas(card, {
             scale: 3,
-            logging: false,
-            useCORS: true,
-            backgroundColor: '#1e293b',
-            windowWidth: card.scrollWidth,
-            windowHeight: card.scrollHeight
+            backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#000000' : '#f2f2f7',
+            borderRadius: 20
         });
-        
         const link = document.createElement('a');
-        link.download = `deenbase-hadith-${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png', 1.0);
+        link.download = `hadith-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
         link.click();
-        
-        showToast("Image saved!");
+        showToast("Image Exported");
     } catch (err) {
-        console.error(err);
-        alert("Could not create image");
+        showToast("Error saving image");
     }
-    
-    buttons.forEach(b => b.style.display = 'block');
-    if (notesSection) notesSection.style.display = 'block';
-    if (relatedSection) relatedSection.style.display = 'block';
-    if (addNotesBtn) addNotesBtn.style.display = 'block';
+
+    hideSelectors.forEach(sel => {
+        const el = card.querySelector(sel);
+        if(el) el.style.display = '';
+    });
     watermark.remove();
 }
 
 async function loadRelatedHadiths(currentHadith, container) {
     try {
         const currentNum = parseInt(currentHadith.hadithNumber);
-        const relatedNums = [];
+        const relatedNums = [currentNum - 1, currentNum + 1].filter(n => n > 0 && n <= 7563);
         
-        for (let i = -2; i <= 2; i++) {
-            if (i !== 0) {
-                const num = currentNum + i;
-                if (num > 0 && num <= 7563) {
-                    relatedNums.push(num);
-                }
-            }
-        }
-        
-        const relatedHadiths = [];
+        const section = document.createElement('div');
+        section.className = 'related-section';
+        section.innerHTML = '<div class="related-title">More from Bukhari</div>';
         
         for (const num of relatedNums) {
-            try {
-                const url = `https://hadithapi.com/api/hadiths?apiKey=${API_KEY}&book=sahih-bukhari&hadithNumber=${num}`;
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (result.hadiths && result.hadiths.data.length > 0) {
-                    relatedHadiths.push(result.hadiths.data[0]);
-                }
-            } catch (e) {
-                console.log('Failed to load related:', num);
-            }
-        }
-        
-        if (relatedHadiths.length > 0) {
-            const section = document.createElement('div');
-            section.className = 'related-section';
-            section.innerHTML = '<div class="related-title">📚 Related Hadiths</div>';
+            const url = `https://hadithapi.com/api/hadiths?apiKey=${API_KEY}&book=sahih-bukhari&hadithNumber=${num}`;
+            const response = await fetch(url);
+            const result = await response.json();
             
-            relatedHadiths.forEach(h => {
+            if (result.hadiths && result.hadiths.data[0]) {
+                const h = result.hadiths.data[0];
                 const card = document.createElement('div');
                 card.className = 'related-card';
-                
-                let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, '');
-                if (preview.length > 100) {
-                    preview = preview.substring(0, 100) + "...";
-                }
-                
-                card.innerHTML = `
-                    <div class="related-header">Sahih Al-Bukhari - ${h.hadithNumber}</div>
-                    <div class="related-preview">${preview}</div>
-                `;
-                
-                card.onclick = () => {
-                    fetchHadith(h.hadithNumber.toString());
-                    window.scrollTo(0, 0);
-                };
-                
+                let preview = h.hadithEnglish.substring(0, 90) + "...";
+                card.innerHTML = `<div class="related-header">Hadith ${h.hadithNumber}</div><div class="related-preview">${preview}</div>`;
+                card.onclick = () => fetchHadith(h.hadithNumber.toString());
                 section.appendChild(card);
-            });
-            
-            container.appendChild(section);
+            }
         }
-    } catch (e) {
-        console.error('Error loading related hadiths:', e);
-    }
+        container.appendChild(section);
+    } catch (e) {}
 }
 
 async function fetchHadith(query) {
@@ -414,12 +376,8 @@ async function fetchHadith(query) {
     headerSearch.classList.remove('hidden');
     headerInput.value = query;
     
-    document.querySelectorAll('.history-dropdown').forEach(el => {
-        el.classList.add('hidden');
-    });
-    
     const isNumber = !isNaN(query);
-    const param = isNumber ? `hadithNumber=${query}` : `paginate=200`;
+    const param = isNumber ? `hadithNumber=${query}` : `paginate=100`;
     
     try {
         const url = `https://hadithapi.com/api/hadiths?apiKey=${API_KEY}&book=sahih-bukhari&${param}`;
@@ -432,164 +390,77 @@ async function fetchHadith(query) {
             if (isNumber) {
                 renderFullCard(result.hadiths.data[0]);
             } else {
-                const lower = query.toLowerCase();
-                const filtered = result.hadiths.data.filter(h => 
-                    h.hadithEnglish.toLowerCase().includes(lower)
-                );
-                
-                if (filtered.length > 0) {
-                    renderCompactList(filtered, query);
-                } else {
-                    display.innerHTML = "<p style='text-align:center; margin-top:20px;'>No matches found.</p>";
-                }
+                const filtered = result.hadiths.data.filter(h => h.hadithEnglish.toLowerCase().includes(query.toLowerCase()));
+                renderCompactList(filtered, query);
             }
-            
             history.pushState({ query: query }, "", "#" + query);
+            window.scrollTo({top: 0, behavior: 'smooth'});
         } else {
-            display.innerHTML = "<p style='text-align:center; margin-top:20px;'>No Hadiths found.</p>";
+            display.innerHTML = "<p style='text-align:center;'>No Results Found.</p>";
         }
     } catch (e) {
         loader.classList.add('hidden');
-        display.innerHTML = "<p style='text-align:center; margin-top:20px;'>Connection Error.</p>";
+        display.innerHTML = "<p style='text-align:center;'>Error.</p>";
     }
 }
 
 function renderCompactList(data, query) {
     const display = document.getElementById('display');
-    
-    display.innerHTML = `<div class='results-info'>Found ${data.length} results for "${query}"</div>`;
-    
+    display.innerHTML = `<div class='results-info'>Search: "${query}"</div>`;
     const container = document.createElement('div');
-    container.style.cssText = "border:1px solid var(--border); border-radius:12px; overflow:hidden;";
+    container.style.cssText = "border:1px solid var(--border); border-radius:18px; overflow:hidden; background:var(--card);";
     
     data.forEach(h => {
         const card = document.createElement('div');
         card.className = 'compact-card';
-        
-        let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, '');
-        if (preview.length > 120) {
-            preview = preview.substring(0, 120) + "...";
-        }
-        
-        card.innerHTML = `
-            <div class="compact-header">
-                <span>Sahih Al-Bukhari - ${h.hadithNumber}</span>
-                <span>➔</span>
-            </div>
-            <div class="compact-preview">${preview}</div>
-        `;
-        
-        card.onclick = () => {
-            display.innerHTML = "";
-            renderFullCard(h);
-            window.scrollTo(0, 0);
-        };
-        
+        card.innerHTML = `<div class="compact-header"><span>Hadith ${h.hadithNumber}</span><span>➔</span></div><div class="compact-preview">${h.hadithEnglish.substring(0, 100)}...</div>`;
+        card.onclick = () => { renderFullCard(h); window.scrollTo(0, 0); };
         container.appendChild(card);
     });
-    
     display.appendChild(container);
-    
     const btn = document.createElement('button');
-    btn.className = "back-home-btn";
-    btn.innerText = "← Back to Home";
-    btn.onclick = () => goHome();
+    btn.className = "back-home-btn"; btn.innerText = "← Back"; btn.onclick = () => goHome();
     display.appendChild(btn);
 }
 
 function renderFullCard(h) {
     const display = document.getElementById('display');
+    display.innerHTML = "";
     const favIcon = isFavorite(h.hadithNumber) ? "❤️" : "🤍";
     const isFav = isFavorite(h.hadithNumber);
     
-    // Hide header search when viewing hadith
-    document.getElementById('headerSearch').classList.add('hidden');
-    
     const card = document.createElement('div');
     card.className = 'card';
-    
     const fav = favorites.find(f => f.hadithNumber === h.hadithNumber);
     const hasNote = fav && fav.note;
     
-    let notesHTML = '';
-    if (isFav) {
-        if (hasNote) {
-            notesHTML = `
-                <div class="notes-section">
-                    <div class="notes-header">
-                        <div class="notes-title">📝 Your Notes</div>
-                        <button class="notes-edit-btn" onclick="openNotesModal(${h.hadithNumber})">Edit</button>
-                    </div>
-                    <div class="notes-text">${fav.note}</div>
-                </div>
-            `;
-        } else {
-            notesHTML = `
-                <button class="add-notes-btn" onclick="openNotesModal(${h.hadithNumber})">
-                    📝 Add Personal Notes
-                </button>
-            `;
-        }
-    }
+    let notesHTML = isFav ? (hasNote ? 
+        `<div class="notes-section"><div class="notes-header"><div class="notes-title">Notes</div><button class="notes-edit-btn" onclick="openNotesModal(${h.hadithNumber})">Edit</button></div><div class="notes-text">${fav.note}</div></div>` : 
+        `<button class="add-notes-btn" onclick="openNotesModal(${h.hadithNumber})">📝 Add Notes</button>`) : '';
     
     card.innerHTML = `
         <div class="card-top-actions">
-            <div>
-                <div class="hadith-header">Sahih Al-Bukhari - ${h.hadithNumber}</div>
-                <div class="hadith-grade">Grade: <span class="grade-badge">Sahih</span></div>
-            </div>
+            <div><div class="hadith-header">Sahih Al-Bukhari ${h.hadithNumber}</div><div class="hadith-grade"><span class="grade-badge">Sahih</span></div></div>
             <button class="fav-btn">${favIcon}</button>
         </div>
         <p class="arabic">${h.hadithArabic}</p>
-        <div class="lang-toggle">
-            <span class="tab-eng active">English</span>
-            <span class="tab-urdu">Urdu</span>
-        </div>
-        <div class="trans-content">
-            <p class="trans-text content-eng">${h.hadithEnglish}</p>
-            <p class="trans-text content-urdu hidden">${h.hadithUrdu}</p>
-        </div>
+        <div class="lang-toggle"><span class="tab-eng active">English</span><span class="tab-urdu">Urdu</span></div>
+        <div class="trans-content"><p class="trans-text content-eng">${h.hadithEnglish}</p><p class="trans-text content-urdu hidden">${h.hadithUrdu}</p></div>
         ${notesHTML}
-        <div class="action-row">
-            <button class="copy-btn">📋 Copy</button>
-            <button class="share-btn">📸 Share Image</button>
-        </div>
-        <button class="back-home-btn">← Back to Home</button>
+        <div class="action-row"><button class="copy-btn">📋 Copy</button><button class="share-btn">📸 Share</button></div>
+        <button class="back-home-btn">← Home</button>
     `;
     
-    const tabEng = card.querySelector('.tab-eng');
-    const tabUrdu = card.querySelector('.tab-urdu');
-    const contentEng = card.querySelector('.content-eng');
-    const contentUrdu = card.querySelector('.content-urdu');
+    const tE = card.querySelector('.tab-eng'), tU = card.querySelector('.tab-urdu'), cE = card.querySelector('.content-eng'), cU = card.querySelector('.content-urdu');
+    tE.onclick = () => { tE.classList.add('active'); tU.classList.remove('active'); cE.classList.remove('hidden'); cU.classList.add('hidden'); triggerHaptic(); };
+    tU.onclick = () => { tU.classList.add('active'); tE.classList.remove('active'); cU.classList.remove('hidden'); cE.classList.add('hidden'); triggerHaptic(); };
     
-    tabEng.onclick = () => {
-        tabEng.classList.add('active');
-        tabUrdu.classList.remove('active');
-        contentEng.classList.remove('hidden');
-        contentUrdu.classList.add('hidden');
-        triggerHaptic();
-    };
-    
-    tabUrdu.onclick = () => {
-        tabUrdu.classList.add('active');
-        tabEng.classList.remove('active');
-        contentUrdu.classList.remove('hidden');
-        contentEng.classList.add('hidden');
-        triggerHaptic();
-    };
-    
-    card.querySelector('.copy-btn').onclick = () => {
-        const text = `Sahih Bukhari ${h.hadithNumber}\n\n${h.hadithEnglish}`;
-        fallbackCopyText(text);
-        triggerHaptic();
-    };
-    
+    card.querySelector('.copy-btn').onclick = () => { fallbackCopyText(`Bukhari ${h.hadithNumber}\n\n${h.hadithEnglish}`); triggerHaptic(); };
     card.querySelector('.share-btn').onclick = () => shareCard(card);
     card.querySelector('.back-home-btn').onclick = () => goHome();
     card.querySelector('.fav-btn').onclick = (e) => toggleFavorite(e.target, h);
     
     display.appendChild(card);
-    
     loadRelatedHadiths(h, card);
     loadFonts();
 }
@@ -597,67 +468,32 @@ function renderFullCard(h) {
 async function loadDailyHadith() {
     const dailySection = document.getElementById('dailySection');
     const dailyCard = document.getElementById('dailyCard');
-    
     if (!dailySection || !dailyCard) return;
     
-    dailySection.classList.remove('hidden');
-    
-    const shortHadithIDs = [1, 9, 13, 16, 33, 47, 50, 600, 6136, 6412];
-    const today = new Date().getDate();
-    const idToLoad = shortHadithIDs[today % shortHadithIDs.length];
+    const ids = [1, 9, 13, 16, 33, 47, 50, 600, 6136, 6412];
+    const id = ids[new Date().getDate() % ids.length];
     
     try {
-        const url = `https://hadithapi.com/api/hadiths?apiKey=${API_KEY}&book=sahih-bukhari&hadithNumber=${idToLoad}`;
-        const response = await fetch(url);
+        const response = await fetch(`https://hadithapi.com/api/hadiths?apiKey=${API_KEY}&book=sahih-bukhari&hadithNumber=${id}`);
         const result = await response.json();
-        
-        if (result.hadiths && result.hadiths.data.length > 0) {
+        if (result.hadiths && result.hadiths.data[0]) {
             const h = result.hadiths.data[0];
-            let preview = h.hadithEnglish.replace(/<[^>]*>?/gm, '');
-            
-            if (preview.length > 150) {
-                preview = preview.substring(0, 150) + "...";
-            }
-            
-            dailyCard.innerHTML = `
-                <div class="daily-quote">"${preview}"</div>
-                <div class="daily-ref">Sahih Al-Bukhari - ${h.hadithNumber}</div>
-            `;
-            
+            dailyCard.innerHTML = `<div class="daily-quote">"${h.hadithEnglish.substring(0, 140)}..."</div><div class="daily-ref">Bukhari - ${h.hadithNumber}</div>`;
             dailyCard.onclick = () => fetchHadith(h.hadithNumber);
+            dailySection.classList.remove('hidden');
         }
-    } catch (e) {
-        dailyCard.innerHTML = "Failed to load.";
-    }
+    } catch (e) {}
 }
 
-function getRandomHadith() {
-    const randomNum = Math.floor(Math.random() * 7000) + 1;
-    fetchHadith(randomNum);
-}
+function getRandomHadith() { fetchHadith(Math.floor(Math.random() * 7000) + 1); }
 
 function fallbackCopyText(text) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    
-    try {
-        document.execCommand('copy');
-        showToast("Copied!");
-    } catch (err) {
-        alert('Unable to copy');
-    }
-    
-    document.body.removeChild(textArea);
+    const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); showToast("Copied"); } catch (e) {}
+    document.body.removeChild(t);
 }
 
 function showToast(msg) {
-    const toast = document.getElementById("toast");
-    toast.innerText = msg || "Copied to Clipboard!";
-    toast.classList.add("show");
-    
-    setTimeout(() => {
-        toast.classList.remove("show");
-    }, 3000);
+    const t = document.getElementById("toast"); t.innerText = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
 }

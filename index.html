@@ -3,54 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeenBase</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Amiri&display=swap" rel="stylesheet">
+    <title>DeenBase - Islamic Knowledge Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <div id="toast"></div>
+
     <header class="header">
         <div class="header-content">
             <div class="header-top">
-                <h1 class="logo" onclick="goHome()">📖 DeenBase</h1>
+                <h1 class="logo" onclick="goHome()">
+                    <span class="logo-icon">📖</span>
+                    <span class="logo-text">DeenBase</span>
+                </h1>
             </div>
             <div class="search-container hidden" id="headerSearch">
                 <div class="search-wrapper">
-                    <input type="text" id="headerInput" placeholder="Search Hadith #...">
-                    <button onclick="fetchHadith(document.getElementById('headerInput').value)">Search</button>
+                    <input type="text" id="headerInput" placeholder="Search Hadith #, keyword..." autocomplete="off">
+                    <button onclick="searchFromHeader()">Search</button>
                 </div>
             </div>
         </div>
     </header>
 
+    <aside id="sideMenu" class="side-menu">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="color:var(--primary);">Settings</h3>
+            <button onclick="toggleMenu()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        
+        <div class="menu-item" onclick="toggleTheme()">
+            <span style="font-size:20px;">🌓</span>
+            <div>
+                <div style="font-weight:600;">Dark Mode</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Toggle theme</div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:20px;">
+            <div style="font-weight:700; color:var(--text-secondary); margin-bottom:15px; font-size:12px;">READING SETTINGS</div>
+            <div style="margin-bottom:15px;">
+                <label style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px;">
+                    <span>Arabic Size</span>
+                    <span id="arabicValue" style="color:var(--primary); font-weight:600;">26px</span>
+                </label>
+                <input type="range" min="20" max="40" value="26" id="arabicSlider" oninput="updateFonts()" style="width:100%;">
+            </div>
+            <div>
+                <label style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px;">
+                    <span>English Size</span>
+                    <span id="engValue" style="color:var(--primary); font-weight:600;">16px</span>
+                </label>
+                <input type="range" min="14" max="22" value="16" id="engSlider" oninput="updateFonts()" style="width:100%;">
+            </div>
+        </div>
+    </aside>
+    <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+
     <main id="display">
         <div class="welcome-screen">
-            <div style="text-align:center; margin-bottom:30px;">
-                <h2>Welcome to DeenBase</h2>
-                <p style="color:var(--text-secondary);">Authentic knowledge from Sahih Al-Bukhari</p>
+            <div class="hero-content">
+                <div style="font-size: 50px; margin-bottom: 10px;">📖</div>
+                <h2>DeenBase</h2>
+                <p class="subtitle">Authentic Knowledge from Sahih Al-Bukhari</p>
             </div>
             
-            <div class="search-wrapper" style="margin-bottom:20px;">
-                <input type="text" id="heroInput" placeholder="Search Hadith # or keyword...">
-                <button onclick="fetchHadith(document.getElementById('heroInput').value)">Search</button>
+            <div class="hero-search">
+                <div class="search-wrapper">
+                    <input type="text" id="heroInput" placeholder="Search Hadith # or keyword..." autocomplete="off">
+                    <button onclick="searchFromHero()">Search</button>
+                </div>
             </div>
 
             <div class="quick-actions">
-                <div class="quick-action-btn" onclick="getRandomHadith()">
-                    <span style="font-size:24px;">✨</span>
+                <button class="quick-action-btn" onclick="getRandomHadith()">
+                    <span>✨</span>
                     <span>Random Hadith</span>
-                </div>
-                <div class="quick-action-btn" onclick="toggleTheme()">
-                    <span style="font-size:24px;">🌓</span>
-                    <span>Toggle Theme</span>
-                </div>
+                </button>
             </div>
 
-            <div class="section-header">
+            <div class="daily-section hidden" id="dailySection">
                 <span class="section-title">🌟 Hadith of the Day</span>
-            </div>
-            <div class="daily-card" id="dailyCard">
-                <div class="spinner" style="margin: 0 auto;"></div>
+                <div class="daily-card" id="dailyCard">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -61,16 +102,25 @@
 
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="goHome()" id="navHome">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            </svg>
             <span>Home</span>
         </button>
         <button class="nav-item" onclick="focusSearch()" id="navSearch">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
             <span>Search</span>
         </button>
-        <button class="nav-item" onclick="toggleTheme()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
-            <span>Theme</span>
+        <button class="nav-item" onclick="toggleMenu()" id="navMenu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span>Menu</span>
         </button>
     </nav>
 

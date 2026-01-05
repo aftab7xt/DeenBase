@@ -1,3 +1,8 @@
+document.querySelectorAll('.ios-spinner').forEach(spinner => {
+    if (!spinner.children.length) {
+        for (let i = 0; i < 12; i++) spinner.appendChild(document.createElement('div'));
+    }
+});
 const API_KEY = "$2y$10$83tRfHskMMReLlAtJiFNeQ5SO7xAxYwgGHIDxhLI4HPW8nRJP15";
 
 let homeHTML = "";

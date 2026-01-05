@@ -2,110 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>DeenBase - Islamic Knowledge Hub</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeenBase</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Amiri&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="toast"></div>
-
-    <div id="notesModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>✍️ Reflection</h3>
-                <button class="modal-close" onclick="closeNotesModal()">✕</button>
-            </div>
-            <textarea id="notesTextarea" placeholder="Notes for this Hadith..."></textarea>
-            <div class="modal-actions">
-                <button class="modal-btn cancel-btn" onclick="closeNotesModal()">Cancel</button>
-                <button class="modal-btn save-btn" onclick="saveNote()">Save</button>
-            </div>
-        </div>
-    </div>
-
     <header class="header">
         <div class="header-content">
             <div class="header-top">
-                <h1 class="logo" onclick="goHome()">
-                    <span class="logo-icon">📖</span>
-                    <span class="logo-text">DeenBase</span>
-                </h1>
+                <h1 class="logo" onclick="goHome()">📖 DeenBase</h1>
             </div>
             <div class="search-container hidden" id="headerSearch">
                 <div class="search-wrapper">
-                    <input type="text" id="headerInput" placeholder="Search..." autocomplete="off">
-                    <button onclick="searchFromHeader()">Search</button>
+                    <input type="text" id="headerInput" placeholder="Search Hadith #...">
+                    <button onclick="fetchHadith(document.getElementById('headerInput').value)">Search</button>
                 </div>
-                <div id="headerHistory" class="history-dropdown hidden"></div>
             </div>
         </div>
     </header>
 
-    <aside id="sideMenu" class="side-menu">
-        <div class="menu-header">
-            <span>⚙️ Settings</span>
-            <button onclick="toggleMenu()" class="close-btn">✕</button>
-        </div>
-        <div class="menu-content">
-            <div class="menu-item" onclick="toggleTheme()">
-                <span class="menu-icon">🌓</span>
-                <div class="menu-text">
-                    <div class="menu-title">Appearance</div>
-                    <div class="menu-desc">Switch Dark/Light</div>
-                </div>
-            </div>
-            <div class="menu-section">
-                <div class="section-title">📏 Text Configuration</div>
-                <div class="slider-group">
-                    <label><span>Arabic Size</span><span class="slider-value" id="arabicValue">26px</span></label>
-                    <input type="range" min="20" max="45" value="26" id="arabicSlider" oninput="updateFonts()">
-                </div>
-                <div class="slider-group">
-                    <label><span>Translation Size</span><span class="slider-value" id="engValue">17px</span></label>
-                    <input type="range" min="14" max="22" value="17" id="engSlider" oninput="updateFonts()">
-                </div>
-            </div>
-        </div>
-    </aside>
-    <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
-
-    <main id="display" style="transition: opacity 0.3s ease;">
+    <main id="display">
         <div class="welcome-screen">
-            <div class="hero-content">
-                <div style="font-size: 64px; margin-bottom: 20px;">📖</div>
-                <h2>Explore Al-Bukhari</h2>
-                <p class="subtitle">Access authentic Islamic wisdom with modern clarity.</p>
+            <div style="text-align:center; margin-bottom:30px;">
+                <h2>Welcome to DeenBase</h2>
+                <p style="color:var(--text-secondary);">Authentic knowledge from Sahih Al-Bukhari</p>
             </div>
             
-            <div class="hero-search">
-                <div class="search-wrapper">
-                    <input type="text" id="heroInput" placeholder="Hadith # or keyword..." autocomplete="off">
-                    <button onclick="searchFromHero()">Find</button>
-                </div>
-                <div id="heroHistory" class="history-dropdown hidden"></div>
+            <div class="search-wrapper" style="margin-bottom:20px;">
+                <input type="text" id="heroInput" placeholder="Search Hadith # or keyword...">
+                <button onclick="fetchHadith(document.getElementById('heroInput').value)">Search</button>
             </div>
 
             <div class="quick-actions">
                 <div class="quick-action-btn" onclick="getRandomHadith()">
-                    <span style="font-size: 20px;">✨</span><br>Random
+                    <span style="font-size:24px;">✨</span>
+                    <span>Random Hadith</span>
                 </div>
-                <div class="quick-action-btn" onclick="showFavorites()">
-                    <span style="font-size: 20px;">❤️</span><br>Saved
+                <div class="quick-action-btn" onclick="toggleTheme()">
+                    <span style="font-size:24px;">🌓</span>
+                    <span>Toggle Theme</span>
                 </div>
             </div>
 
-            <div class="daily-section hidden" id="dailySection">
-                <div class="section-header">
-                    <span class="section-title">Hadith of the Day</span>
-                </div>
-                <div class="daily-card" id="dailyCard">
-                    <div class="spinner"></div>
-                </div>
+            <div class="section-header">
+                <span class="section-title">🌟 Hadith of the Day</span>
+            </div>
+            <div class="daily-card" id="dailyCard">
+                <div class="spinner" style="margin: 0 auto;"></div>
             </div>
         </div>
     </main>
@@ -123,13 +68,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <span>Search</span>
         </button>
-        <button class="nav-item" onclick="showFavorites()" id="navFav">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-            <span>Saved</span>
-        </button>
-        <button class="nav-item" onclick="toggleMenu()" id="navMenu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            <span>Settings</span>
+        <button class="nav-item" onclick="toggleTheme()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
+            <span>Theme</span>
         </button>
     </nav>
 

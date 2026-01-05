@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>DeenBase - Islamic Knowledge Hub</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeenBase</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,18 +15,7 @@
 <div id="toast"></div>
 
 <header class="header">
-    <div class="header-content">
-        <div class="header-top">
-            <h1 class="logo" onclick="goHome()">DeenBase</h1>
-        </div>
-
-        <div class="search-container hidden" id="headerSearch">
-            <div class="search-wrapper">
-                <input id="headerInput" placeholder="Search Hadith # or keyword..." />
-                <button onclick="searchFromHeader()">Search</button>
-            </div>
-        </div>
-    </div>
+    <h1 class="logo" onclick="goHome()">DeenBase</h1>
 </header>
 
 <aside id="sideMenu" class="side-menu">
@@ -38,10 +25,10 @@
     </div>
 
     <div class="menu-item" onclick="toggleTheme()">
-        <span>🌓</span>
+        <div class="menu-icon">🌓</div>
         <div>
-            <strong>Dark Mode</strong>
-            <small>Toggle theme</small>
+            <div class="menu-title">Dark Mode</div>
+            <div class="menu-sub">Toggle theme</div>
         </div>
     </div>
 
@@ -65,50 +52,39 @@
 <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
 
 <main id="display">
-    <div class="welcome-screen">
-        <div class="hero-content">
-            <h2>DeenBase</h2>
-            <p class="subtitle">Authentic Knowledge from Sahih Al-Bukhari</p>
+    <section class="home">
+        <h2 class="title">DeenBase</h2>
+        <p class="subtitle">Authentic Knowledge from Sahih Al-Bukhari</p>
+
+        <div class="search-wrapper">
+            <input id="heroInput" placeholder="Search Hadith # or keyword…">
+            <button onclick="searchFromHero()">Search</button>
         </div>
 
-        <div class="hero-search">
-            <div class="search-wrapper">
-                <input id="heroInput" placeholder="Search Hadith # or keyword..." />
-                <button onclick="searchFromHero()">Search</button>
-            </div>
-        </div>
+        <button class="random-btn" onclick="getRandomHadith()">Random Hadith</button>
 
-        <div class="quick-actions">
-            <button class="quick-action-btn" onclick="getRandomHadith()">
-                Random Hadith
-            </button>
-        </div>
-
-        <div class="daily-section hidden" id="dailySection">
-            <span class="section-title">Hadith of the Day</span>
+        <div class="daily-section" id="dailySection">
+            <div class="section-title">Hadith of the Day</div>
             <div class="daily-card" id="dailyCard">
                 <div class="ios-spinner"></div>
             </div>
         </div>
-    </div>
+    </section>
 </main>
 
 <div id="loader" class="loader-container hidden">
     <div class="ios-spinner"></div>
 </div>
 
-<!-- Bottom Navigation (NO EMOJIS) -->
 <nav class="bottom-nav">
     <button class="nav-item active" onclick="goHome()" id="navHome">
-        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>
         <span>Home</span>
     </button>
-
     <button class="nav-item" onclick="focusSearch()" id="navSearch">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
         <span>Search</span>
     </button>
-
     <button class="nav-item" onclick="toggleMenu()" id="navMenu">
         <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         <span>Menu</span>
@@ -116,5 +92,12 @@
 </nav>
 
 <script src="script.js"></script>
+<script>
+document.querySelectorAll('.ios-spinner').forEach(s=>{
+    if(!s.children.length){
+        for(let i=0;i<12;i++) s.appendChild(document.createElement('div'))
+    }
+})
+</script>
 </body>
 </html>

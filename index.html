@@ -20,6 +20,9 @@
     <header class="app-header glass">
         <div class="header-content">
             <h1 class="app-logo">DeenBase</h1>
+            <button id="settings-toggle-btn" class="icon-btn">
+                <span class="material-icons-round">settings</span>
+            </button>
         </div>
     </header>
 
@@ -80,7 +83,6 @@
         </section>
 
         <section id="view-library" class="view">
-            
             <div class="segmented-control glass">
                 <button class="segment active" data-tab="history">History</button>
                 <button class="segment" data-tab="bookmarks">Bookmarks</button>
@@ -108,11 +110,49 @@
                     <p>No bookmarks yet.</p>
                 </div>
             </div>
-
         </section>
 
     </main>
 
+    <div id="settings-overlay" class="settings-overlay hidden">
+        <div class="settings-card glass">
+            <div class="settings-header">
+                <h3>Settings</h3>
+                <button id="close-settings" class="icon-btn">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+
+            <div class="setting-item">
+                <label>Theme</label>
+                <button id="theme-toggle" class="theme-btn">
+                    <span class="material-icons-round">dark_mode</span>
+                    <span id="theme-label">Dark Mode</span>
+                </button>
+            </div>
+
+            <div class="setting-item">
+                <label>Arabic Font Size</label>
+                <input type="range" id="fs-arabic" min="1.2" max="2.5" step="0.1" value="1.6">
+            </div>
+
+            <div class="setting-item">
+                <label>Translation Font Size</label>
+                <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1.0">
+            </div>
+            
+            <div class="setting-footer">
+                <p>DeenBase v1.0</p>
+            </div>
+        </div>
+    </div>
+<div id="settings-overlay" class="settings-overlay hidden">
+        </div>
+
+    <div id="toast-container" class="toast-container hidden">
+        <span class="material-icons-round">check_circle</span>
+        <span id="toast-message">Copied to clipboard</span>
+    </div>
     <nav class="bottom-nav glass">
         <button class="nav-item active" data-target="view-home">
             <span class="material-icons-round">home</span>

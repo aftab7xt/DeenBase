@@ -1,44 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeenBase</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DeenBase</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="header">
-  <h1>DeenBase</h1>
-</header>
+    <div class="app-background"></div>
 
-<main class="container">
-  <p class="subtitle">Authentic Knowledge from Sahih Al-Bukhari</p>
+    <header class="app-header glass">
+        <div class="header-content">
+            <h1 class="app-logo">DeenBase</h1>
+        </div>
+    </header>
 
-  <div class="search-box">
-    <input id="searchInput" placeholder="Search hadith # or keyword">
-    <button id="searchBtn">Search</button>
-  </div>
+    <main id="main-container">
+        
+        <section id="view-home" class="view active-view">
+            <div class="section-header">
+                <h3>Hadith of the Day</h3>
+                <span id="current-date" class="date-badge">...</span>
+            </div>
 
-  <div class="actions">
-    <button id="randomBtn">Random Hadith</button>
-    <button id="bookmarksBtn">Bookmarks</button>
-  </div>
+            <div id="hotd-container">
+                <div class="ios-spinner">
+                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                </div>
+            </div>
 
-  <h3 class="section-title">Hadith of the Day</h3>
-  <div id="dailyCard" class="card">
-    <div class="ios-spinner"></div>
-  </div>
+            <div class="spacer"></div>
+            
+            <div class="placeholder-content" style="height: auto; margin-top: 20px;">
+                <p class="subtext">Daily inspiration from Sahih al-Bukhari.</p>
+            </div>
+        </section>
 
-  <div id="results"></div>
-</main>
+        <section id="view-search" class="view">
+            <div class="search-container sticky-search">
+                <div class="input-group">
+                    <input type="number" id="search-input" placeholder="Enter Hadith Number..." class="glass-input">
+                    <button id="search-btn" class="action-btn">
+                        <span class="material-icons-round">search</span>
+                    </button>
+                </div>
+            </div>
 
-<div id="overlay" class="overlay hidden">
-  <div class="ios-spinner"></div>
-</div>
+            <div id="loader" class="ios-spinner hidden">
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+            </div>
 
-<script src="script.js"></script>
+            <div id="search-results" class="results-list"></div>
+
+            <div id="reader-view" class="reader-container hidden">
+                <button id="back-to-results" class="text-btn">
+                    <span class="material-icons-round">arrow_back</span>
+                    Back
+                </button>
+                <div id="reader-content"></div>
+            </div>
+        </section>
+
+        <section id="view-library" class="view">
+            
+            <div class="segmented-control glass">
+                <button class="segment active" data-tab="history">History</button>
+                <button class="segment" data-tab="bookmarks">Bookmarks</button>
+            </div>
+
+            <div id="tab-history" class="library-tab active-tab">
+                <div class="section-header">
+                    <span class="subtext">Recently Viewed</span>
+                    <button id="clear-history-btn" class="text-btn small">Clear</button>
+                </div>
+                <div id="history-list" class="results-list"></div>
+                <div id="history-empty" class="placeholder-content hidden" style="height: 40vh;">
+                    <span class="material-icons-round" style="opacity:0.5;">history</span>
+                    <p>No history yet.</p>
+                </div>
+            </div>
+
+            <div id="tab-bookmarks" class="library-tab">
+                <div class="section-header">
+                    <span class="subtext">Saved Hadiths</span>
+                </div>
+                <div id="bookmarks-list" class="results-list"></div>
+                <div id="bookmarks-empty" class="placeholder-content hidden" style="height: 40vh;">
+                    <span class="material-icons-round" style="opacity:0.5;">bookmark_border</span>
+                    <p>No bookmarks yet.</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <nav class="bottom-nav glass">
+        <button class="nav-item active" data-target="view-home">
+            <span class="material-icons-round">home</span>
+            <span class="nav-label">Home</span>
+        </button>
+        <button class="nav-item" data-target="view-search">
+            <span class="material-icons-round">search</span>
+            <span class="nav-label">Search</span>
+        </button>
+        <button class="nav-item" data-target="view-library">
+            <span class="material-icons-round">collections_bookmark</span>
+            <span class="nav-label">Library</span>
+        </button>
+    </nav>
+
+    <script src="script.js"></script>
 </body>
 </html>

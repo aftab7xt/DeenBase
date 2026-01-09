@@ -68,14 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
             userSettings = JSON.parse(stored);
         }
         applySettings();
-        
-        // Update UI inputs to match loaded settings
         sliderArabic.value = userSettings.fsArabic;
         sliderEnglish.value = userSettings.fsEnglish;
     }
 
     function applySettings() {
-        // Apply Theme
         if (userSettings.theme === 'light') {
             document.body.classList.add('light-theme');
             themeLabel.textContent = "Light Mode";
@@ -85,8 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
             themeLabel.textContent = "Dark Mode";
             themeToggle.querySelector('span').textContent = 'dark_mode';
         }
-
-        // Apply Fonts
         document.documentElement.style.setProperty('--fs-arabic', userSettings.fsArabic + 'rem');
         document.documentElement.style.setProperty('--fs-english', userSettings.fsEnglish + 'rem');
     }
@@ -96,21 +91,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupSettingsEvents() {
-        // Toggle Overlay
         settingsBtn.addEventListener('click', () => settingsOverlay.classList.remove('hidden'));
         closeSettingsBtn.addEventListener('click', () => settingsOverlay.classList.add('hidden'));
         settingsOverlay.addEventListener('click', (e) => {
             if (e.target === settingsOverlay) settingsOverlay.classList.add('hidden');
         });
 
-        // Theme Toggle
         themeToggle.addEventListener('click', () => {
             userSettings.theme = userSettings.theme === 'dark' ? 'light' : 'dark';
             applySettings();
             saveSettings();
         });
 
-        // Font Sliders
         sliderArabic.addEventListener('input', (e) => {
             userSettings.fsArabic = e.target.value;
             applySettings();
@@ -327,8 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.sticky-search').classList.remove('hidden');
     }
 
-    // --- HTML GENERATORS ---
-     // --- UPDATED HTML GENERATOR (Step 9) ---
+    // --- HTML GENERATORS (Unified) ---
     function generateCardHTML(hadith, uniqueId) {
         const englishText = hadith.hadithEnglish || "Translation not available.";
         const urduText = hadith.hadithUrdu || "Urdu translation not available.";
@@ -348,10 +339,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="font-size: 0.7rem; opacity: 0.7; margin-top:2px;">${chapter}</div>
                     </div>
                     <div class="card-controls">
+                        <button class="share-btn" title="Share Image">
+                            <span class="material-icons-round">ios_share</span>
+                        </button>
                         <button class="copy-btn" title="Copy Text">
                             <span class="material-icons-round">content_copy</span>
                         </button>
-
                         <button class="bookmark-btn ${iconClass}">
                             <span class="material-icons-round">${iconName}</span>
                         </button>
@@ -366,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // --- UPDATED LISTENERS (Step 9) ---
+    // --- LISTENERS (Unified) ---
     function attachCardListeners(hadith, cardId) {
         const card = document.getElementById(cardId);
         if(!card) return;
@@ -393,29 +386,120 @@ document.addEventListener('DOMContentLoaded', () => {
             const added = toggleBookmark(hadith);
             if(added) {
                 bmIcon.textContent = 'bookmark'; bmBtn.classList.add('bookmarked');
-                showToast("Saved to Bookmarks"); // Optional: Feedback
+                showToast("Saved to Bookmarks");
             } else {
                 bmIcon.textContent = 'bookmark_border'; bmBtn.classList.remove('bookmarked');
-                showToast("Removed from Bookmarks"); // Optional: Feedback
+                showToast("Removed from Bookmarks");
             }
         });
 
-        // 3. STEP 9: Copy Logic
+        // 3. Copy Logic
         const copyBtn = card.querySelector('.copy-btn');
         copyBtn.addEventListener('click', () => {
-            // Prepare text format
             const textToCopy = `Sahih al-Bukhari ${hadith.hadithNumber}\n\n${hadith.hadithArabic}\n\n${hadith.hadithEnglish}\n\n(Via DeenBase)`;
-            
             navigator.clipboard.writeText(textToCopy).then(() => {
                 showToast("Copied to clipboard");
             }).catch(err => {
-                console.error('Failed to copy: ', err);
                 showToast("Failed to copy");
             });
         });
+
+        // 4. Share Logic
+        const shareBtn = card.querySelector('.share-btn');
+        shareBtn.addEventListener('click', () => {
+            shareAsImage(cardId);
+        });
     }
 
-    // --- STEP 9: TOAST HELPER ---
+    // --- SHARE IMAGE FUNCTION ---
+    async function shareAsImage(elementId) {
+        // 1. Check if library exists
+        if (typeof html2canvas === 'undefined') {
+            alert("Error: html2canvas library missing. Check internet/script tag.");
+            return;
+        }
+
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        showToast("Generating image...");
+
+        try {
+            const clone = element.cloneNode(true);
+            clone.style.position = 'fixed';
+            clone.style.top = '-9999px';
+            clone.style.left = '0';
+            clone.style.width = '100%'; 
+            clone.style.maxWidth = '600px';
+            clone.style.background = '#0f172a';
+            clone.style.color = '#f8fafc';
+            clone.style.padding = '30px';
+            clone.style.borderRadius = '0';
+            
+            const controls = clone.querySelector('.card-controls');
+            if(controls) controls.remove();
+
+            const footer = document.createElement('div');
+            footer.innerHTML = "DeenBase • Sahih al-Bukhari";
+            footer.style.textAlign = 'center';
+            footer.style.fontSize = '0.8rem';
+            footer.style.opacity = '0.5';
+            footer.style.marginTop = '20px';
+            footer.style.borderTop = '1px solid #334155';
+            footer.style.paddingTop = '10px';
+            clone.appendChild(footer);
+
+            document.body.appendChild(clone);
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                backgroundColor: '#0f172a',
+                useCORS: true,
+                logging: false 
+            });
+
+            document.body.removeChild(clone);
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    showToast("Image generation failed");
+                    return;
+                }
+
+                const file = new File([blob], "deenbase-hadith.png", { type: "image/png" });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'DeenBase',
+                            text: 'Read this hadith on DeenBase.'
+                        });
+                    } catch (err) {
+                        downloadImage(canvas);
+                    }
+                } else {
+                    downloadImage(canvas);
+                }
+            });
+
+        } catch (error) {
+            console.error(error);
+            showToast("Error generating image");
+        }
+    }
+
+    function downloadImage(canvas) {
+        const link = document.createElement('a');
+        link.download = 'deenbase-hadith.png';
+        link.href = canvas.toDataURL();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast("Image downloaded");
+    }
+
+    // --- TOAST HELPER ---
     function showToast(message) {
         const toast = document.getElementById('toast-container');
         const msgSpan = document.getElementById('toast-message');
@@ -423,18 +507,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if(toast && msgSpan) {
             msgSpan.textContent = message;
             toast.classList.remove('hidden');
-            
-            // Hide after 2 seconds
             setTimeout(() => {
                 toast.classList.add('hidden');
             }, 2000);
         }
     }
 
-
     // --- UTILS ---
     function showLoader() { loader.classList.remove('hidden'); }
     function hideLoader() { loader.classList.add('hidden'); }
 
-    console.log("DeenBase: Step 8 (Final) Loaded");
+    console.log("DeenBase: Step 10 (Fixed & Cleaned) Loaded");
 });

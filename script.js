@@ -3,11 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view');
     
-    // Search Elements
+    // Search Elements (Update this block)
     const searchBtn = document.getElementById('search-btn');
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
-    
+    const searchHistoryContainer = document.getElementById('search-history-container'); // NEW
+    const recentSearchesList = document.getElementById('recent-searches-list');         // NEW
+
     // [CRITICAL FIX] Updated ID to match your new HTML
     const readerView = document.getElementById('view-reader'); 
     
@@ -116,6 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
             saveSettings();
         });
     }
+    // --- STEP 17: HANDLE NATIVE BACK GESTURE ---
+    window.addEventListener('popstate', (event) => {
+        // If the browser goes "back" and the reader is open, we close it
+        const readerView = document.getElementById('view-reader');
+        if (readerView && readerView.classList.contains('active-view')) {
+            hideReader();
+        }
+    });
 
     // --- 2. NAVIGATION ---
     function setupNavigation() {
@@ -131,7 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     views.forEach(view => view.classList.remove('active-view'));
                     document.getElementById(targetId)?.classList.add('active-view');
-                    
+                                        if(targetId === 'view-library') {
+                        renderHistory(); renderBookmarks();
+                    }
+                    // ADD THIS:
+                    if(targetId === 'view-search' && searchInput.value === '') {
+                        renderRecentSearches();
+                    }
+
                     if(targetId === 'view-library') {
                         renderHistory(); renderBookmarks();
                     }
@@ -202,6 +219,43 @@ document.addEventListener('DOMContentLoaded', () => {
             attachListListeners('bookmark', bookmarks);
         }
     }
+        // --- STEP 18: RENDER SEARCH HISTORY ---
+    function renderRecentSearches() {
+        const history = getStoredData(KEY_HISTORY).slice(0, 5); // Get top 5 items
+        
+        if (history.length === 0) {
+            searchHistoryContainer.classList.add('hidden');
+            return;
+        }
+
+        searchHistoryContainer.classList.remove('hidden');
+        
+        // We reuse the generator but give it a unique class 'recent-item' to avoid conflicts
+        let html = '';
+        history.forEach((hadith, index) => {
+            const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
+            const preview = cleanText.substring(0, 60) + '...';
+            html += `
+                <div class="result-item recent-item" data-index="${index}">
+                    <div class="result-ref">Bukhari ${hadith.hadithNumber}</div>
+                    <div class="result-preview">${preview}</div>
+                    <span class="material-icons-round cache-badge" style="opacity:0.4;">history</span>
+                </div>
+            `;
+        });
+        recentSearchesList.innerHTML = html;
+
+        // Attach listeners specifically to these recent items
+        const items = recentSearchesList.querySelectorAll('.recent-item');
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                const index = item.getAttribute('data-index');
+                openReader(history[index]);
+                addToHistory(history[index]); // Move to top of history
+            });
+        });
+    }
+
     function generateListHTML(list, type) {
         let html = '';
         list.forEach((hadith, index) => {
@@ -289,13 +343,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 7. SEARCH ---
     function setupSearch() {
         searchBtn.addEventListener('click', performSearch);
+        
+        // Update: Handle input changes to toggle history/results
+        searchInput.addEventListener('input', (e) => {
+            if (e.target.value.trim() === '') {
+                searchResults.innerHTML = '';
+                renderRecentSearches();
+            }
+        });
+
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
-        backBtn.addEventListener('click', hideReader);
+        
+        // In-app back button
+        backBtn.addEventListener('click', () => {
+            history.back(); 
+        });
     }
 
     async function performSearch() {
         const query = searchInput.value.trim();
-        if (!query) return;
+        if (!query) {
+            renderRecentSearches(); // Show history if empty
+            return;
+        }
+        
+        // Hide history when searching
+        if(searchHistoryContainer) searchHistoryContainer.classList.add('hidden');
+        
         showLoader(); hideReader(); searchResults.innerHTML = '';
 
         try {
@@ -317,7 +391,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSearchResults(hadiths) {
         searchResults.innerHTML = generateListHTML(hadiths, 'result');
-        document.querySelectorAll('.result-item').forEach((item, idx) => {
+        
+        // FIX: Only select items INSIDE the searchResults container
+        const items = searchResults.querySelectorAll('.result-item');
+        
+        items.forEach((item, idx) => {
             item.addEventListener('click', () => {
                 const selected = hadiths[idx];
                 openReader(selected);
@@ -326,24 +404,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 8. READER VIEW (UPDATED FOR STEP 14) ---
     function openReader(hadith) {
-        // Capture where we are right now before switching
         const currentView = document.querySelector('.active-view');
         if(currentView && currentView.id !== 'view-reader') {
             lastActiveViewId = currentView.id;
         }
 
-        // Render content
+        // STEP 17: Push a new state to history so the back button works
+        // We add a hash '#reader' so the URL changes slightly
+        history.pushState({ view: 'reader' }, "Reader", "#reader");
+
         readerContent.innerHTML = generateCardHTML(hadith, 'reader-card');
         attachCardListeners(hadith, 'reader-card');
 
-        // Switch to Independent Reader View
         views.forEach(view => view.classList.remove('active-view'));
+        const readerView = document.getElementById('view-reader');
         if(readerView) readerView.classList.add('active-view');
         
         document.getElementById('main-container').scrollTop = 0;
     }
+
 
     function hideReader() {
         if(readerView) readerView.classList.remove('active-view');
@@ -501,6 +581,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if(searchBtn) searchBtn.click();
         }
     };
+    // --- STEP 16: LOGO CLICK ---
+    const logoHeader = document.querySelector('.logo-wrapper');
+    if (logoHeader) {
+        logoHeader.addEventListener('click', () => {
+            // We simply click the hidden logic of the Home Navigation button
+            const homeBtn = document.querySelector('[data-target="view-home"]');
+            if (homeBtn) homeBtn.click();
+            
+            // Optional: Scroll to top of home
+            const container = document.getElementById('main-container');
+            if(container) container.scrollTop = 0;
+        });
+    }
 
     console.log("DeenBase: Step 14 (Final Complete) Loaded");
 });

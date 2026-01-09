@@ -287,3 +287,26 @@ body.light-theme .toast-container span {
 .share-btn .material-icons-round {
     font-size: 20px;
 }
+/* ===========================
+   STEP 11: Logo Styling
+   =========================== */
+
+/* Wrapper to align Image and Text side-by-side */
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between logo icon and text */
+}
+
+/* The Logo Image Icon */
+.app-logo-img {
+    height: 36px; /* Fits nicely within the 60px header */
+    width: auto;  /* Maintain aspect ratio */
+    object-fit: contain;
+}
+
+/* Slight adjustment to existing app-logo text to ensure perfect alignment */
+.app-logo {
+    margin: 0; /* Remove default browser margins */
+    line-height: 1; /* Tighter line height for alignment */
+}

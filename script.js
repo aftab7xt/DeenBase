@@ -7,14 +7,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
-    const readerView = document.getElementById('reader-view');
+    
+    // [CRITICAL FIX] Updated ID to match your new HTML
+    const readerView = document.getElementById('view-reader'); 
+    
     const readerContent = document.getElementById('reader-content');
     const backBtn = document.getElementById('back-to-results');
     const loader = document.getElementById('loader');
 
     // Home Elements
     const hotdContainer = document.getElementById('hotd-container');
-    const dateBadge = document.getElementById('current-date');
+    const dateBadge = document.getElementById('hero-date'); // Updated for Home Redesign
 
     // Library Elements
     const segments = document.querySelectorAll('.segment');
@@ -26,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearHistoryBtn = document.getElementById('clear-history-btn');
 
     // Settings Elements
-    const settingsBtn = document.getElementById('settings-toggle-btn');
     const settingsOverlay = document.getElementById('settings-overlay');
     const closeSettingsBtn = document.getElementById('close-settings');
     const themeToggle = document.getElementById('theme-toggle');
@@ -46,12 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const KEY_BOOKMARKS = 'deenbase_bookmarks';
     const KEY_SETTINGS = 'deenbase_settings';
 
-    // --- DEFAULT SETTINGS ---
-    let userSettings = {
-        theme: 'dark',
-        fsArabic: 1.6,
-        fsEnglish: 1.0
-    };
+    // --- STATE ---
+    let userSettings = { theme: 'dark', fsArabic: 1.6, fsEnglish: 1.0 };
+    let lastActiveViewId = 'view-home'; 
 
     // --- INIT ---
     loadSettings();
@@ -61,12 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLibrary();
     setupSettingsEvents();
 
-    // --- SETTINGS LOGIC ---
+    // --- 1. SETTINGS LOGIC ---
     function loadSettings() {
         const stored = localStorage.getItem(KEY_SETTINGS);
-        if (stored) {
-            userSettings = JSON.parse(stored);
-        }
+        if (stored) userSettings = JSON.parse(stored);
         applySettings();
         sliderArabic.value = userSettings.fsArabic;
         sliderEnglish.value = userSettings.fsEnglish;
@@ -91,7 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupSettingsEvents() {
-        settingsBtn.addEventListener('click', () => settingsOverlay.classList.remove('hidden'));
+        const settingsBtn = document.getElementById('settings-nav-btn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                settingsOverlay.classList.remove('hidden');
+            });
+        }
         closeSettingsBtn.addEventListener('click', () => settingsOverlay.classList.add('hidden'));
         settingsOverlay.addEventListener('click', (e) => {
             if (e.target === settingsOverlay) settingsOverlay.classList.add('hidden');
@@ -108,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
             applySettings();
             saveSettings();
         });
-
         sliderEnglish.addEventListener('input', (e) => {
             userSettings.fsEnglish = e.target.value;
             applySettings();
@@ -116,26 +117,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NAVIGATION ---
+    // --- 2. NAVIGATION ---
     function setupNavigation() {
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
-                navItems.forEach(nav => nav.classList.remove('active'));
                 const clickedBtn = e.target.closest('.nav-item');
-                clickedBtn.classList.add('active');
-
-                views.forEach(view => view.classList.remove('active-view'));
                 const targetId = clickedBtn.getAttribute('data-target');
-                document.getElementById(targetId)?.classList.add('active-view');
-                
-                if(targetId === 'view-library') {
-                    renderHistory(); renderBookmarks();
+
+                if (targetId) {
+                    lastActiveViewId = targetId;
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    clickedBtn.classList.add('active');
+
+                    views.forEach(view => view.classList.remove('active-view'));
+                    document.getElementById(targetId)?.classList.add('active-view');
+                    
+                    if(targetId === 'view-library') {
+                        renderHistory(); renderBookmarks();
+                    }
                 }
             });
         });
     }
 
-    // --- LIBRARY ---
+    // --- 3. LIBRARY ---
     function setupLibrary() {
         segments.forEach(seg => {
             seg.addEventListener('click', () => {
@@ -151,16 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- STORAGE HELPERS ---
+    // --- 4. STORAGE HELPERS ---
     function getStoredData(key) {
         const stored = localStorage.getItem(key);
         return stored ? JSON.parse(stored) : [];
     }
-    
     function isBookmarked(hadithNumber) {
         return getStoredData(KEY_BOOKMARKS).some(b => b.hadithNumber == hadithNumber);
     }
-
     function toggleBookmark(hadith) {
         let bookmarks = getStoredData(KEY_BOOKMARKS);
         const index = bookmarks.findIndex(b => b.hadithNumber == hadith.hadithNumber);
@@ -170,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBookmarks();
         return index === -1;
     }
-
     function addToHistory(hadith) {
         let history = getStoredData(KEY_HISTORY);
         history = history.filter(h => h.hadithNumber != hadith.hadithNumber);
@@ -179,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(KEY_HISTORY, JSON.stringify(history));
     }
 
-    // --- RENDERERS ---
+    // --- 5. RENDERERS ---
     function renderHistory() {
         const history = getStoredData(KEY_HISTORY);
         if (history.length === 0) {
@@ -190,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             attachListListeners('history', history);
         }
     }
-
     function renderBookmarks() {
         const bookmarks = getStoredData(KEY_BOOKMARKS);
         if (bookmarks.length === 0) {
@@ -201,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
             attachListListeners('bookmark', bookmarks);
         }
     }
-
     function generateListHTML(list, type) {
         let html = '';
         list.forEach((hadith, index) => {
@@ -218,22 +218,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         return html;
     }
-
     function attachListListeners(type, data) {
         document.querySelectorAll(`.${type}-item`).forEach(item => {
             item.addEventListener('click', () => {
-                const index = item.getAttribute('data-index');
-                const selectedHadith = data[index];
-                document.querySelector('[data-target="view-search"]').click();
-                setTimeout(() => openReader(selectedHadith), 50);
+                openReader(data[item.getAttribute('data-index')]);
             });
         });
     }
 
-    // --- DATA FETCHING ---
+    // --- 6. HOME & HOTD ---
     async function initHadithOfTheDay() {
-        const today = new Date().toDateString();
-        dateBadge.textContent = today;
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const today = new Date().toLocaleDateString('en-US', options);
+        
+        const dateEl = document.getElementById('hero-date'); 
+        if(dateEl) dateEl.textContent = today;
+
         const storedDate = localStorage.getItem(KEY_DATE);
         const storedData = localStorage.getItem(KEY_HOTD);
 
@@ -261,10 +261,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderHOTD(hadith) {
-        hotdContainer.innerHTML = generateCardHTML(hadith, 'hotd-card');
-        attachCardListeners(hadith, 'hotd-card');
+        const arabicText = hadith.hadithArabic || "";
+        const englishText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
+        const ref = `Bukhari ${hadith.hadithNumber}`;
+
+        hotdContainer.innerHTML = `
+            <div class="hotd-compact-card" id="hotd-click-target">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="result-ref">${ref}</span>
+                    <span class="material-icons-round" style="font-size:16px; opacity:0.5;">open_in_full</span>
+                </div>
+                <div class="compact-arabic">${arabicText}</div>
+                <div class="compact-english">${englishText}</div>
+                <div class="tap-hint">
+                    <span>Tap to read full hadith</span>
+                    <span class="material-icons-round" style="font-size:14px;">arrow_forward</span>
+                </div>
+            </div>
+        `;
+
+        const cardBtn = document.getElementById('hotd-click-target');
+        if (cardBtn) {
+            cardBtn.addEventListener('click', () => openReader(hadith));
+        }
     }
 
+    // --- 7. SEARCH ---
     function setupSearch() {
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
@@ -304,22 +326,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- 8. READER VIEW (UPDATED FOR STEP 14) ---
     function openReader(hadith) {
+        // Capture where we are right now before switching
+        const currentView = document.querySelector('.active-view');
+        if(currentView && currentView.id !== 'view-reader') {
+            lastActiveViewId = currentView.id;
+        }
+
+        // Render content
         readerContent.innerHTML = generateCardHTML(hadith, 'reader-card');
         attachCardListeners(hadith, 'reader-card');
-        searchResults.classList.add('hidden');
-        document.querySelector('.sticky-search').classList.add('hidden');
-        readerView.classList.remove('hidden');
+
+        // Switch to Independent Reader View
+        views.forEach(view => view.classList.remove('active-view'));
+        if(readerView) readerView.classList.add('active-view');
+        
         document.getElementById('main-container').scrollTop = 0;
     }
 
     function hideReader() {
-        readerView.classList.add('hidden');
-        searchResults.classList.remove('hidden');
-        document.querySelector('.sticky-search').classList.remove('hidden');
+        if(readerView) readerView.classList.remove('active-view');
+        
+        // Go back to previous view
+        const prevView = document.getElementById(lastActiveViewId);
+        if(prevView) prevView.classList.add('active-view');
+        
+        // Update Bottom Nav
+        navItems.forEach(nav => nav.classList.remove('active'));
+        const navBtn = document.querySelector(`[data-target="${lastActiveViewId}"]`);
+        if(navBtn) navBtn.classList.add('active');
     }
 
-    // --- HTML GENERATORS (Unified) ---
+    // --- 9. CARD GENERATOR ---
     function generateCardHTML(hadith, uniqueId) {
         const englishText = hadith.hadithEnglish || "Translation not available.";
         const urduText = hadith.hadithUrdu || "Urdu translation not available.";
@@ -351,7 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="lang-toggle">ENG</button>
                     </div>
                 </div>
-                
                 <div class="hadith-arabic">${arabicText}</div>
                 <div class="hadith-english">${englishText}</div>
                 <div class="hadith-urdu">${urduText}</div>
@@ -359,16 +397,14 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // --- LISTENERS (Unified) ---
     function attachCardListeners(hadith, cardId) {
         const card = document.getElementById(cardId);
         if(!card) return;
 
-        // 1. Language Toggle
+        // Language
         const langBtn = card.querySelector('.lang-toggle');
         const enText = card.querySelector('.hadith-english');
         const urText = card.querySelector('.hadith-urdu');
-        
         langBtn.addEventListener('click', () => {
             if (enText.style.display === 'none') {
                 enText.style.display = 'block'; urText.style.display = 'none';
@@ -379,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 2. Bookmark Toggle
+        // Bookmark
         const bmBtn = card.querySelector('.bookmark-btn');
         const bmIcon = bmBtn.querySelector('.material-icons-round');
         bmBtn.addEventListener('click', () => {
@@ -393,129 +429,78 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 3. Copy Logic
+        // Copy
         const copyBtn = card.querySelector('.copy-btn');
         copyBtn.addEventListener('click', () => {
             const textToCopy = `Sahih al-Bukhari ${hadith.hadithNumber}\n\n${hadith.hadithArabic}\n\n${hadith.hadithEnglish}\n\n(Via DeenBase)`;
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                showToast("Copied to clipboard");
-            }).catch(err => {
-                showToast("Failed to copy");
-            });
+            navigator.clipboard.writeText(textToCopy).then(() => showToast("Copied")).catch(() => showToast("Failed"));
         });
 
-        // 4. Share Logic
+        // Share
         const shareBtn = card.querySelector('.share-btn');
-        shareBtn.addEventListener('click', () => {
-            shareAsImage(cardId);
-        });
+        shareBtn.addEventListener('click', () => shareAsImage(cardId));
     }
 
-    // --- SHARE IMAGE FUNCTION ---
+    // --- 10. SHARE IMAGE ---
     async function shareAsImage(elementId) {
-        // 1. Check if library exists
         if (typeof html2canvas === 'undefined') {
-            alert("Error: html2canvas library missing. Check internet/script tag.");
-            return;
+            alert("Library missing. Cannot share image."); return;
         }
-
         const element = document.getElementById(elementId);
-        if (!element) return;
-
-        showToast("Generating image...");
-
+        showToast("Generating...");
         try {
             const clone = element.cloneNode(true);
-            clone.style.position = 'fixed';
-            clone.style.top = '-9999px';
-            clone.style.left = '0';
-            clone.style.width = '100%'; 
-            clone.style.maxWidth = '600px';
-            clone.style.background = '#0f172a';
-            clone.style.color = '#f8fafc';
-            clone.style.padding = '30px';
-            clone.style.borderRadius = '0';
+            clone.style.position = 'fixed'; clone.style.top = '-9999px'; clone.style.background = '#0f172a';
+            clone.style.color = '#f8fafc'; clone.style.padding = '30px'; clone.style.width = '600px';
+            if(clone.querySelector('.card-controls')) clone.querySelector('.card-controls').remove();
             
-            const controls = clone.querySelector('.card-controls');
-            if(controls) controls.remove();
-
             const footer = document.createElement('div');
             footer.innerHTML = "DeenBase • Sahih al-Bukhari";
-            footer.style.textAlign = 'center';
-            footer.style.fontSize = '0.8rem';
-            footer.style.opacity = '0.5';
-            footer.style.marginTop = '20px';
-            footer.style.borderTop = '1px solid #334155';
-            footer.style.paddingTop = '10px';
+            footer.style.textAlign='center'; footer.style.marginTop='20px'; footer.style.opacity='0.5';
             clone.appendChild(footer);
-
             document.body.appendChild(clone);
 
-            const canvas = await html2canvas(clone, {
-                scale: 2,
-                backgroundColor: '#0f172a',
-                useCORS: true,
-                logging: false 
-            });
-
+            const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0f172a', useCORS: true });
             document.body.removeChild(clone);
 
             canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    showToast("Image generation failed");
-                    return;
-                }
-
-                const file = new File([blob], "deenbase-hadith.png", { type: "image/png" });
-
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'DeenBase',
-                            text: 'Read this hadith on DeenBase.'
-                        });
-                    } catch (err) {
-                        downloadImage(canvas);
-                    }
-                } else {
-                    downloadImage(canvas);
-                }
+                const file = new File([blob], "hadith.png", { type: "image/png" });
+                if (navigator.share) {
+                    try { await navigator.share({ files: [file] }); } catch(e) { downloadImage(canvas); }
+                } else { downloadImage(canvas); }
             });
-
-        } catch (error) {
-            console.error(error);
-            showToast("Error generating image");
-        }
+        } catch (e) { showToast("Error"); }
     }
 
     function downloadImage(canvas) {
         const link = document.createElement('a');
-        link.download = 'deenbase-hadith.png';
-        link.href = canvas.toDataURL();
-        document.body.appendChild(link);
+        link.download = 'deenbase.png'; link.href = canvas.toDataURL();
         link.click();
-        document.body.removeChild(link);
-        showToast("Image downloaded");
-    }
-
-    // --- TOAST HELPER ---
-    function showToast(message) {
-        const toast = document.getElementById('toast-container');
-        const msgSpan = document.getElementById('toast-message');
-        
-        if(toast && msgSpan) {
-            msgSpan.textContent = message;
-            toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 2000);
-        }
     }
 
     // --- UTILS ---
+    function showToast(message) {
+        const toast = document.getElementById('toast-container');
+        const msgSpan = document.getElementById('toast-message');
+        if(toast && msgSpan) {
+            msgSpan.textContent = message; toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2000);
+        }
+    }
     function showLoader() { loader.classList.remove('hidden'); }
     function hideLoader() { loader.classList.add('hidden'); }
 
-    console.log("DeenBase: Step 10 (Fixed & Cleaned) Loaded");
+    // --- HOME CHIPS TRIGGER ---
+    window.triggerTopic = function(keyword) {
+        const searchNav = document.querySelector('[data-target="view-search"]');
+        if(searchNav) searchNav.click();
+        const input = document.getElementById('search-input');
+        if(input) {
+            input.value = keyword;
+            const searchBtn = document.getElementById('search-btn');
+            if(searchBtn) searchBtn.click();
+        }
+    };
+
+    console.log("DeenBase: Step 14 (Final Complete) Loaded");
 });

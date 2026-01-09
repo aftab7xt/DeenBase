@@ -19,43 +19,39 @@
     <div class="app-background"></div>
 
     <header class="app-header glass">
-               <div class="header-content">
+        <div class="header-content">
             <div class="logo-wrapper">
                 <img src="logo.png" alt="DeenBase Logo" class="app-logo-img">
                 <h1 class="app-logo">DeenBase</h1>
             </div>
-
-            <button id="settings-toggle-btn" class="icon-btn">
-                <span class="material-icons-round">settings</span>
-            </button>
-        </div>
-
+            </div>
     </header>
 
     <main id="main-container">
         
         <section id="view-home" class="view active-view">
-            <div class="section-header">
-                <h3>Hadith of the Day</h3>
-                <span id="current-date" class="date-badge">...</span>
+            
+            <div class="home-greeting">
+                <div class="greeting-arabic">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</div>
+                <div id="hero-date" class="greeting-sub">...</div>
             </div>
 
-            <div id="hotd-container">
-                <div class="ios-spinner">
-                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                    <div class="spinner-blade"></div><div class="spinner-blade"></div>
+            <div style="padding: 0 4px;">
+                <div class="hotd-label">Hadith of the Day</div>
+                
+                <div id="hotd-container">
+                    <div class="ios-spinner">
+                        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="spacer"></div>
-            
-            <div class="placeholder-content" style="height: auto; margin-top: 20px;">
-                <p class="subtext">Daily inspiration from Sahih al-Bukhari.</p>
-            </div>
         </section>
 
         <section id="view-search" class="view">
@@ -79,13 +75,6 @@
 
             <div id="search-results" class="results-list"></div>
 
-            <div id="reader-view" class="reader-container hidden">
-                <button id="back-to-results" class="text-btn">
-                    <span class="material-icons-round">arrow_back</span>
-                    Back
-                </button>
-                <div id="reader-content"></div>
-            </div>
         </section>
 
         <section id="view-library" class="view">
@@ -116,6 +105,15 @@
                     <p>No bookmarks yet.</p>
                 </div>
             </div>
+        </section>
+         <section id="view-reader" class="view">
+            <div class="reader-header glass" style="position:sticky; top:0; z-index:10; padding: 10px 0; margin-bottom: 20px;">
+                <button id="back-to-results" class="text-btn">
+                    <span class="material-icons-round">arrow_back</span>
+                    Back
+                </button>
+            </div>
+            <div id="reader-content"></div>
         </section>
 
     </main>
@@ -159,7 +157,7 @@
         <span class="material-icons-round">check_circle</span>
         <span id="toast-message">Copied to clipboard</span>
     </div>
-    <nav class="bottom-nav glass">
+       <nav class="bottom-nav glass">
         <button class="nav-item active" data-target="view-home">
             <span class="material-icons-round">home</span>
             <span class="nav-label">Home</span>
@@ -172,7 +170,12 @@
             <span class="material-icons-round">collections_bookmark</span>
             <span class="nav-label">Library</span>
         </button>
+        <button class="nav-item" id="settings-nav-btn">
+            <span class="material-icons-round">settings</span>
+            <span class="nav-label">Settings</span>
+        </button>
     </nav>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script src="script.js"></script>

@@ -25,22 +25,104 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookmarksEmpty = document.getElementById('bookmarks-empty');
     const clearHistoryBtn = document.getElementById('clear-history-btn');
 
+    // Settings Elements
+    const settingsBtn = document.getElementById('settings-toggle-btn');
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const closeSettingsBtn = document.getElementById('close-settings');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeLabel = document.getElementById('theme-label');
+    const sliderArabic = document.getElementById('fs-arabic');
+    const sliderEnglish = document.getElementById('fs-english');
+
     // --- Config & Storage Keys ---
     const RAW_API_KEY = '$2y$10$83tRfHskMMReLlAtJiFNeQ5SO7xAxYwgGHIDxhLI4HPW8nRJP15';
     const API_KEY = encodeURIComponent(RAW_API_KEY);
     const BASE_URL = 'https://hadithapi.com/api/hadiths';
     
     const HOTD_IDS = [1, 7, 13, 27, 42, 58, 9, 3, 52]; 
-    const STORAGE_KEY_HOTD = 'deenbase_hotd_data';
-    const STORAGE_KEY_DATE = 'deenbase_hotd_date';
-    const STORAGE_KEY_HISTORY = 'deenbase_history';
-    const STORAGE_KEY_BOOKMARKS = 'deenbase_bookmarks';
+    const KEY_HOTD = 'deenbase_hotd_data';
+    const KEY_DATE = 'deenbase_hotd_date';
+    const KEY_HISTORY = 'deenbase_history';
+    const KEY_BOOKMARKS = 'deenbase_bookmarks';
+    const KEY_SETTINGS = 'deenbase_settings';
+
+    // --- DEFAULT SETTINGS ---
+    let userSettings = {
+        theme: 'dark',
+        fsArabic: 1.6,
+        fsEnglish: 1.0
+    };
 
     // --- INIT ---
+    loadSettings();
     initHadithOfTheDay();
     setupNavigation();
     setupSearch();
-    setupLibrary(); // Setup for both history and bookmarks
+    setupLibrary();
+    setupSettingsEvents();
+
+    // --- SETTINGS LOGIC ---
+    function loadSettings() {
+        const stored = localStorage.getItem(KEY_SETTINGS);
+        if (stored) {
+            userSettings = JSON.parse(stored);
+        }
+        applySettings();
+        
+        // Update UI inputs to match loaded settings
+        sliderArabic.value = userSettings.fsArabic;
+        sliderEnglish.value = userSettings.fsEnglish;
+    }
+
+    function applySettings() {
+        // Apply Theme
+        if (userSettings.theme === 'light') {
+            document.body.classList.add('light-theme');
+            themeLabel.textContent = "Light Mode";
+            themeToggle.querySelector('span').textContent = 'light_mode';
+        } else {
+            document.body.classList.remove('light-theme');
+            themeLabel.textContent = "Dark Mode";
+            themeToggle.querySelector('span').textContent = 'dark_mode';
+        }
+
+        // Apply Fonts
+        document.documentElement.style.setProperty('--fs-arabic', userSettings.fsArabic + 'rem');
+        document.documentElement.style.setProperty('--fs-english', userSettings.fsEnglish + 'rem');
+    }
+
+    function saveSettings() {
+        localStorage.setItem(KEY_SETTINGS, JSON.stringify(userSettings));
+    }
+
+    function setupSettingsEvents() {
+        // Toggle Overlay
+        settingsBtn.addEventListener('click', () => settingsOverlay.classList.remove('hidden'));
+        closeSettingsBtn.addEventListener('click', () => settingsOverlay.classList.add('hidden'));
+        settingsOverlay.addEventListener('click', (e) => {
+            if (e.target === settingsOverlay) settingsOverlay.classList.add('hidden');
+        });
+
+        // Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            userSettings.theme = userSettings.theme === 'dark' ? 'light' : 'dark';
+            applySettings();
+            saveSettings();
+        });
+
+        // Font Sliders
+        sliderArabic.addEventListener('input', (e) => {
+            userSettings.fsArabic = e.target.value;
+            applySettings();
+            saveSettings();
+        });
+
+        sliderEnglish.addEventListener('input', (e) => {
+            userSettings.fsEnglish = e.target.value;
+            applySettings();
+            saveSettings();
+        });
+    }
 
     // --- NAVIGATION ---
     function setupNavigation() {
@@ -54,32 +136,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetId = clickedBtn.getAttribute('data-target');
                 document.getElementById(targetId)?.classList.add('active-view');
                 
-                // Refresh Library when opened
                 if(targetId === 'view-library') {
-                    renderHistory();
-                    renderBookmarks();
+                    renderHistory(); renderBookmarks();
                 }
             });
         });
     }
 
-    // --- LIBRARY TABS (History vs Bookmarks) ---
+    // --- LIBRARY ---
     function setupLibrary() {
         segments.forEach(seg => {
             seg.addEventListener('click', () => {
-                // Update Segment UI
                 segments.forEach(s => s.classList.remove('active'));
                 seg.classList.add('active');
-
-                // Switch Tab Content
                 libraryTabs.forEach(t => t.classList.remove('active-tab'));
-                const tabId = `tab-${seg.dataset.tab}`;
-                document.getElementById(tabId).classList.add('active-tab');
+                document.getElementById(`tab-${seg.dataset.tab}`).classList.add('active-tab');
             });
         });
-
         clearHistoryBtn.addEventListener('click', () => {
-            localStorage.removeItem(STORAGE_KEY_HISTORY);
+            localStorage.removeItem(KEY_HISTORY);
             renderHistory();
         });
     }
@@ -89,45 +164,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const stored = localStorage.getItem(key);
         return stored ? JSON.parse(stored) : [];
     }
-
+    
     function isBookmarked(hadithNumber) {
-        const bookmarks = getStoredData(STORAGE_KEY_BOOKMARKS);
-        return bookmarks.some(b => b.hadithNumber == hadithNumber);
+        return getStoredData(KEY_BOOKMARKS).some(b => b.hadithNumber == hadithNumber);
     }
 
     function toggleBookmark(hadith) {
-        let bookmarks = getStoredData(STORAGE_KEY_BOOKMARKS);
+        let bookmarks = getStoredData(KEY_BOOKMARKS);
         const index = bookmarks.findIndex(b => b.hadithNumber == hadith.hadithNumber);
-
-        if (index === -1) {
-            // Add
-            bookmarks.unshift(hadith);
-        } else {
-            // Remove
-            bookmarks.splice(index, 1);
-        }
-        localStorage.setItem(STORAGE_KEY_BOOKMARKS, JSON.stringify(bookmarks));
-        
-        // Refresh UI if in library view
+        if (index === -1) bookmarks.unshift(hadith);
+        else bookmarks.splice(index, 1);
+        localStorage.setItem(KEY_BOOKMARKS, JSON.stringify(bookmarks));
         renderBookmarks();
-        return index === -1; // returns true if added, false if removed
+        return index === -1;
     }
 
     function addToHistory(hadith) {
-        let history = getStoredData(STORAGE_KEY_HISTORY);
+        let history = getStoredData(KEY_HISTORY);
         history = history.filter(h => h.hadithNumber != hadith.hadithNumber);
         history.unshift(hadith);
         if (history.length > 50) history.pop();
-        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+        localStorage.setItem(KEY_HISTORY, JSON.stringify(history));
     }
 
     // --- RENDERERS ---
-
     function renderHistory() {
-        const history = getStoredData(STORAGE_KEY_HISTORY);
+        const history = getStoredData(KEY_HISTORY);
         if (history.length === 0) {
-            historyList.innerHTML = '';
-            historyEmpty.classList.remove('hidden');
+            historyList.innerHTML = ''; historyEmpty.classList.remove('hidden');
         } else {
             historyEmpty.classList.add('hidden');
             historyList.innerHTML = generateListHTML(history, 'history');
@@ -136,10 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderBookmarks() {
-        const bookmarks = getStoredData(STORAGE_KEY_BOOKMARKS);
+        const bookmarks = getStoredData(KEY_BOOKMARKS);
         if (bookmarks.length === 0) {
-            bookmarksList.innerHTML = '';
-            bookmarksEmpty.classList.remove('hidden');
+            bookmarksList.innerHTML = ''; bookmarksEmpty.classList.remove('hidden');
         } else {
             bookmarksEmpty.classList.add('hidden');
             bookmarksList.innerHTML = generateListHTML(bookmarks, 'bookmark');
@@ -153,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
             const preview = cleanText.substring(0, 60) + '...';
             const icon = type === 'history' ? 'history' : 'bookmark';
-            
             html += `
                 <div class="result-item ${type}-item" data-index="${index}">
                     <div class="result-ref">Bukhari ${hadith.hadithNumber}</div>
@@ -170,21 +232,18 @@ document.addEventListener('DOMContentLoaded', () => {
             item.addEventListener('click', () => {
                 const index = item.getAttribute('data-index');
                 const selectedHadith = data[index];
-                
-                // Switch to Search View to read
                 document.querySelector('[data-target="view-search"]').click();
                 setTimeout(() => openReader(selectedHadith), 50);
             });
         });
     }
 
-    // --- CORE HADITH LOGIC ---
-    
+    // --- DATA FETCHING ---
     async function initHadithOfTheDay() {
         const today = new Date().toDateString();
         dateBadge.textContent = today;
-        const storedDate = localStorage.getItem(STORAGE_KEY_DATE);
-        const storedData = localStorage.getItem(STORAGE_KEY_HOTD);
+        const storedDate = localStorage.getItem(KEY_DATE);
+        const storedData = localStorage.getItem(KEY_HOTD);
 
         if (storedDate === today && storedData) {
             renderHOTD(JSON.parse(storedData));
@@ -202,8 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             const hadith = data?.hadiths?.data?.[0];
             if(hadith) {
-                localStorage.setItem(STORAGE_KEY_DATE, date);
-                localStorage.setItem(STORAGE_KEY_HOTD, JSON.stringify(hadith));
+                localStorage.setItem(KEY_DATE, date);
+                localStorage.setItem(KEY_HOTD, JSON.stringify(hadith));
                 renderHOTD(hadith);
             } else hotdContainer.innerHTML = '<p class="placeholder-message">Update failed</p>';
         } catch(e) { hotdContainer.innerHTML = '<p class="placeholder-message">Offline</p>'; }
@@ -214,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         attachCardListeners(hadith, 'hotd-card');
     }
 
-    // --- SEARCH ---
     function setupSearch() {
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
@@ -235,11 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (list && list.length > 0) renderSearchResults(list);
             else searchResults.innerHTML = '<p class="placeholder-message">No hadith found.</p>';
         } catch (error) {
-            // Offline fallback
-            const history = getStoredData(STORAGE_KEY_HISTORY);
-            const bookmarks = getStoredData(STORAGE_KEY_BOOKMARKS);
+            const history = getStoredData(KEY_HISTORY);
+            const bookmarks = getStoredData(KEY_BOOKMARKS);
             const found = history.find(h => h.hadithNumber == query) || bookmarks.find(b => b.hadithNumber == query);
-            
             if (found) renderSearchResults([found]);
             else searchResults.innerHTML = '<p class="placeholder-message" style="color:#ef4444;">Offline & not found.</p>';
         } finally { hideLoader(); }
@@ -247,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSearchResults(hadiths) {
         searchResults.innerHTML = generateListHTML(hadiths, 'result');
-        // Custom listener for search results to add to history
         document.querySelectorAll('.result-item').forEach((item, idx) => {
             item.addEventListener('click', () => {
                 const selected = hadiths[idx];
@@ -272,8 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.sticky-search').classList.remove('hidden');
     }
 
-    // --- UI GENERATORS ---
-
+    // --- HTML GENERATORS ---
+     // --- UPDATED HTML GENERATOR (Step 9) ---
     function generateCardHTML(hadith, uniqueId) {
         const englishText = hadith.hadithEnglish || "Translation not available.";
         const urduText = hadith.hadithUrdu || "Urdu translation not available.";
@@ -281,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const refNumber = hadith.hadithNumber;
         const chapter = hadith.chapter?.chapterEnglish || "";
         
-        // Check bookmark state
         const bookmarked = isBookmarked(refNumber);
         const iconName = bookmarked ? 'bookmark' : 'bookmark_border';
         const iconClass = bookmarked ? 'bookmarked' : '';
@@ -294,6 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="font-size: 0.7rem; opacity: 0.7; margin-top:2px;">${chapter}</div>
                     </div>
                     <div class="card-controls">
+                        <button class="copy-btn" title="Copy Text">
+                            <span class="material-icons-round">content_copy</span>
+                        </button>
+
                         <button class="bookmark-btn ${iconClass}">
                             <span class="material-icons-round">${iconName}</span>
                         </button>
@@ -308,11 +366,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    // --- UPDATED LISTENERS (Step 9) ---
     function attachCardListeners(hadith, cardId) {
         const card = document.getElementById(cardId);
         if(!card) return;
 
-        // Toggle Language
+        // 1. Language Toggle
         const langBtn = card.querySelector('.lang-toggle');
         const enText = card.querySelector('.hadith-english');
         const urText = card.querySelector('.hadith-urdu');
@@ -327,25 +386,55 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Toggle Bookmark
+        // 2. Bookmark Toggle
         const bmBtn = card.querySelector('.bookmark-btn');
         const bmIcon = bmBtn.querySelector('.material-icons-round');
-        
         bmBtn.addEventListener('click', () => {
             const added = toggleBookmark(hadith);
             if(added) {
-                bmIcon.textContent = 'bookmark';
-                bmBtn.classList.add('bookmarked');
+                bmIcon.textContent = 'bookmark'; bmBtn.classList.add('bookmarked');
+                showToast("Saved to Bookmarks"); // Optional: Feedback
             } else {
-                bmIcon.textContent = 'bookmark_border';
-                bmBtn.classList.remove('bookmarked');
+                bmIcon.textContent = 'bookmark_border'; bmBtn.classList.remove('bookmarked');
+                showToast("Removed from Bookmarks"); // Optional: Feedback
             }
         });
+
+        // 3. STEP 9: Copy Logic
+        const copyBtn = card.querySelector('.copy-btn');
+        copyBtn.addEventListener('click', () => {
+            // Prepare text format
+            const textToCopy = `Sahih al-Bukhari ${hadith.hadithNumber}\n\n${hadith.hadithArabic}\n\n${hadith.hadithEnglish}\n\n(Via DeenBase)`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast("Copied to clipboard");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast("Failed to copy");
+            });
+        });
     }
+
+    // --- STEP 9: TOAST HELPER ---
+    function showToast(message) {
+        const toast = document.getElementById('toast-container');
+        const msgSpan = document.getElementById('toast-message');
+        
+        if(toast && msgSpan) {
+            msgSpan.textContent = message;
+            toast.classList.remove('hidden');
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2000);
+        }
+    }
+
 
     // --- UTILS ---
     function showLoader() { loader.classList.remove('hidden'); }
     function hideLoader() { loader.classList.add('hidden'); }
 
-    console.log("DeenBase: Step 7 Loaded");
+    console.log("DeenBase: Step 8 (Final) Loaded");
 });

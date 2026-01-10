@@ -49,6 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const KEY_HISTORY = 'deenbase_history';
     const KEY_BOOKMARKS = 'deenbase_bookmarks';
     const KEY_SETTINGS = 'deenbase_settings';
+    
+        // --- STEP 27: REGISTER SERVICE WORKER ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(() => console.log('Service Worker Registered'))
+            .catch((err) => console.log('Service Worker Failed', err));
+    }
+
 
     // --- STATE ---
     let userSettings = { theme: 'dark', fsArabic: 1.6, fsEnglish: 1.0 };
@@ -522,35 +530,95 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 10. SHARE IMAGE ---
+    // --- STEP 26: SHARE IMAGE (Brand Update) ---
     async function shareAsImage(elementId) {
         if (typeof html2canvas === 'undefined') {
-            alert("Library missing. Cannot share image."); return;
+            alert("Error: html2canvas library missing. Check internet/script tag.");
+            return;
         }
+
         const element = document.getElementById(elementId);
-        showToast("Generating...");
+        if (!element) return;
+
+        showToast("Generating image...");
+
         try {
+            // 1. Create a clone to style specifically for the image
             const clone = element.cloneNode(true);
-            clone.style.position = 'fixed'; clone.style.top = '-9999px'; clone.style.background = '#0f172a';
-            clone.style.color = '#f8fafc'; clone.style.padding = '30px'; clone.style.width = '600px';
-            if(clone.querySelector('.card-controls')) clone.querySelector('.card-controls').remove();
             
+            // 2. Set the branding styles for the export
+            clone.style.position = 'fixed';
+            clone.style.top = '-9999px';
+            clone.style.left = '0';
+            clone.style.width = '600px'; 
+            clone.style.maxWidth = '600px';
+            
+            // BRAND COLORS: Deep Green Background & Off-White Text
+            clone.style.backgroundColor = '#0F222D'; 
+            clone.style.color = '#F0F7F4';
+            
+            // Add a Premium Gold Border
+            clone.style.border = '2px solid #CCA352';
+            clone.style.borderRadius = '20px';
+            
+            clone.style.padding = '40px';
+            
+            // Remove the interactive buttons (Copy, Share, etc.) from the image
+            const controls = clone.querySelector('.card-controls');
+            if(controls) controls.remove();
+
+            // 3. Add a branded footer
             const footer = document.createElement('div');
-            footer.innerHTML = "DeenBase • Sahih al-Bukhari";
-            footer.style.textAlign='center'; footer.style.marginTop='20px'; footer.style.opacity='0.5';
+            footer.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:30px; padding-top:20px; border-top:1px solid rgba(204, 163, 82, 0.3);">
+                    <span style="font-family:serif; color:#CCA352; font-weight:300; letter-spacing:0.05em; font-size:1.2rem;">aftab7xt.github.io/DeenBase/</span>
+                </div>
+            `;
             clone.appendChild(footer);
+
             document.body.appendChild(clone);
 
-            const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0f172a', useCORS: true });
+            // 4. Capture the image
+            const canvas = await html2canvas(clone, {
+                scale: 2, // High resolution
+                backgroundColor: null, // Transparent around the border radius
+                useCORS: true,
+                logging: false 
+            });
+
             document.body.removeChild(clone);
 
+            // 5. Share or Download
             canvas.toBlob(async (blob) => {
-                const file = new File([blob], "hadith.png", { type: "image/png" });
-                if (navigator.share) {
-                    try { await navigator.share({ files: [file] }); } catch(e) { downloadImage(canvas); }
-                } else { downloadImage(canvas); }
+                if (!blob) {
+                    showToast("Image generation failed");
+                    return;
+                }
+
+                const file = new File([blob], "deenbase-hadith.png", { type: "image/png" });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'DeenBase Hadith',
+                            text: 'Read this hadith on DeenBase.'
+                        });
+                    } catch (err) {
+                        // User cancelled share
+                        console.log('Share cancelled');
+                    }
+                } else {
+                    downloadImage(canvas);
+                }
             });
-        } catch (e) { showToast("Error"); }
+
+        } catch (error) {
+            console.error(error);
+            showToast("Error generating image");
+        }
     }
+
 
     function downloadImage(canvas) {
         const link = document.createElement('a');

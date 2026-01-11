@@ -765,7 +765,7 @@ input:checked + .slider:before {
 
 .reader-action-bar {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 8px); /* Added 8px spacing from nav */
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + -50px); /* Added 8px spacing from nav */
     left: 0px;  /* Inset from edges */
     right: 0px; /* Inset from edges */
     height: 55px;
@@ -825,7 +825,7 @@ input:checked + .slider:before {
 }
 /* Push reader content up so it's not hidden behind action bar */
 #view-reader #reader-content {
-    padding-bottom: 90px; /* Reduced from 140px */
+    padding-bottom: 35px; /* Reduced from 140px */
 }
 /* ===========================
    Hide Old Top Buttons in Reader

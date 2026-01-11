@@ -4,49 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DeenBase</title>
-        <link rel="manifest" href="manifest.json">
-    
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0F222D">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<link rel="icon" type="image/png" href="assets/icon-192.png">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-
-
+    <link rel="icon" type="image/png" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@600&family=Inter:wght@300;400;500;600&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="app-background"></div>
 
     <header class="app-header glass">
-        <div class="header-content">
-            <div class="logo-wrapper">
-             <img src="assets/logo.png" class="app-logo-img" alt="DeenBase Logo">
-                <h1 class="app-logo">DeenBase</h1>
+        <div class="header-outer-container">
+            <div class="header-content">
+                <button id="header-back-btn" class="icon-btn">
+                    <span class="material-icons-round" style="font-size: 1.5rem;">arrow_back</span>
+                </button>
+                <div id="header-logo" class="logo-wrapper">
+                    <img src="assets/logo.png" class="app-logo-img" alt="DeenBase Logo">
+                    <h1 class="app-logo">DeenBase</h1>
+                </div>
             </div>
-            </div>
+
     </header>
 
     <main id="main-container">
-        
         <section id="view-home" class="view active-view">
-            
             <div class="home-greeting">
                 <div class="greeting-arabic">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</div>
                 <div id="hero-date" class="greeting-sub">...</div>
             </div>
-
             <div style="padding: 0 01px;">
                 <div class="hotd-label">Hadith of the Day</div>
-                
                 <div id="hotd-container">
                     <div class="ios-spinner">
                         <div class="spinner-blade"></div><div class="spinner-blade"></div>
@@ -58,121 +52,111 @@
                     </div>
                 </div>
             </div>
-
             <div class="spacer"></div>
         </section>
 
-         <section id="view-search" class="view">
-            <div class="search-container sticky-search" style="padding: 01px 01px;">
-                <div class="input-group">
-                    <input type="number" id="search-input" placeholder="Enter Hadith Number..." class="glass-input">
-                    <button id="search-btn" class="action-btn">
-                        <span class="material-icons-round">search</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="loader" class="ios-spinner hidden">
-                <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                <div class="spinner-blade"></div><div class="spinner-blade"></div>
-                <div class="spinner-blade"></div><div class="spinner-blade"></div>
-            </div>
-
-            <div id="search-history-container" class="hidden">
-                <div class="section-header" style="padding: 0 4px; margin-bottom: 10px; margin-top: 10px;">
-                    <span class="subtext">Recent</span>
-                </div>
-                <div id="recent-searches-list" class="results-list"></div>
-            </div>
-
-            <div id="search-results" class="results-list"></div>
-        </section>
-
-
-        <section id="view-library" class="view">
-            <div class="segmented-control glass" style="margin: 0 01px 20px 01px;">
-                <button class="segment active" data-tab="history">History</button>
-                <button class="segment" data-tab="bookmarks">Bookmarks</button>
-            </div>
-
-            <div id="tab-history" class="library-tab active-tab">
-                <div class="section-header">
-                    <span class="subtext">Recently Viewed</span>
-                    <button id="clear-history-btn" class="text-btn small">Clear</button>
-                </div>
-                <div id="history-list" class="results-list"></div>
-                <div id="history-empty" class="placeholder-content hidden" style="height: 40vh;">
-                    <span class="material-icons-round" style="opacity:0.5;">history</span>
-                    <p>No history yet.</p>
-                </div>
-            </div>
-
-            <div id="tab-bookmarks" class="library-tab">
-                <div class="section-header">
-                    <span class="subtext">Saved Hadiths</span>
-                </div>
-                <div id="bookmarks-list" class="results-list"></div>
-                <div id="bookmarks-empty" class="placeholder-content hidden" style="height: 40vh;">
-                    <span class="material-icons-round" style="opacity:0.5;">bookmark_border</span>
-                    <p>No bookmarks yet.</p>
-                </div>
-            </div>
-        </section>
-         <section id="view-reader" class="view">
-            <div class="reader-header glass" style="position:sticky; top:0; z-index:10; padding: 10px 0; margin-bottom: 20px;">
-                <button id="back-to-results" class="text-btn">
-                    <span class="material-icons-round">arrow_back</span>
-                    Back
+<section id="view-search" class="view">
+    <!-- Add Search Bar HERE inside the view -->
+<div class="search-container">
+    <div class="input-wrapper" style="position: relative; display: flex; align-items: stretch; gap: 8px; height: 46px; margin-bottom: 0;">
+            <div style="position: relative; flex: 1; display: flex; align-items: center;">
+                <input type="number" id="search-input-view" placeholder="Enter Hadith Number..." class="glass-input" 
+                       style="width: 100%; height: 100%; padding-right: 45px; margin: 0;">
+                <button id="clear-search-view" class="hidden" 
+                        style="position: absolute; right: 12px; background: none; border: none; color: var(--text-secondary); opacity: 0.5; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; width: 24px; height: 24px;">
+                    <span class="material-icons-round" style="font-size: 20px;">close</span>
                 </button>
             </div>
-            <div id="reader-content"></div>
-        </section>
+            <button id="search-btn-view" class="action-btn" style="height: 100%; padding: 0 15px;">
+                <span class="material-icons-round">search</span>
+            </button>
+        </div>
+    </div>
+    
+    <div id="loader" class="ios-spinner hidden">
+        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+        <div class="spinner-blade"></div><div class="spinner-blade"></div>
+    </div>
+<div id="search-history-container" class="hidden">
+    <div class="section-header" style="padding: 0 4px; margin-bottom: 10px;">
+        <span class="subtext">Recent</span>
+        <button id="clear-recent-btn" class="text-btn small">Clear</button>
+    </div>
+    <div id="recent-searches-list" class="results-list"></div>
+</div>
+        <div id="recent-searches-list" class="results-list"></div>
+    </div>
+    <div id="search-results" class="results-list"></div>
+</section>
 
+<section id="view-library" class="view">
+    <!-- Removed segmented control - Library now shows only Bookmarks -->
+    <div class="section-header" style="margin-bottom: 16px;">
+        <span class="subtext">Saved Hadiths</span>
+    </div>
+    <div id="bookmarks-list" class="results-list"></div>
+    <div id="bookmarks-empty" class="placeholder-content hidden" style="height: 60vh;">
+        <span class="material-icons-round" style="opacity:0.5; font-size: 48px;">bookmark_border</span>
+        <p style="margin-top: 16px; font-size: 1.1rem;">No bookmarks yet.</p>
+        <p style="margin-top: 8px; font-size: 0.9rem; opacity: 0.7;">Tap the bookmark icon on any hadith to save it here.</p>
+    </div>
+</section>
+
+        <section id="view-reader" class="view">
+            <div id="reader-content" style="padding-top: 20px;"></div>
+        </section>
     </main>
 
     <div id="settings-overlay" class="settings-overlay hidden">
-        <div class="settings-card glass">
+        <div class="settings-card">
             <div class="settings-header">
                 <h3>Settings</h3>
                 <button id="close-settings" class="icon-btn">
                     <span class="material-icons-round">close</span>
                 </button>
             </div>
-
-            <div class="setting-item">
-                <label>Theme</label>
-                <button id="theme-toggle" class="theme-btn">
-                    <span class="material-icons-round">dark_mode</span>
-                    <span id="theme-label">Dark Mode</span>
-                </button>
+            <button id="theme-toggle" class="theme-btn" style="margin-bottom: 24px;">
+                <span class="material-icons-round">dark_mode</span>
+                <span id="theme-label">Dark Mode</span>
+            </button>
+            <div class="setting-item" id="oled-container">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="margin:0;">OLED True Black</label>
+                    <label class="switch">
+                        <input type="checkbox" id="oled-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
-
+            <div class="setting-item">
+                <label>Arabic Font Style</label>
+                <div class="segmented-control" style="margin-bottom:0;">
+                    <button class="segment active" data-font="Amiri">Classic</button>
+                    <button class="segment" data-font="Scheherazade New">Modern</button>
+                </div>
+            </div>
             <div class="setting-item">
                 <label>Arabic Font Size</label>
-                <input type="range" id="fs-arabic" min="1.2" max="2.5" step="0.1" value="1.6">
+                <input type="range" id="fs-arabic" min="1" max="3" step="0.1" value="1.6">
             </div>
-
             <div class="setting-item">
                 <label>Translation Font Size</label>
-                <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1.0">
+                <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1">
             </div>
-            
-            <div class="setting-footer">
-                <p>DeenBase v1.0</p>
-            </div>
+            <div class="setting-footer">DeenBase v2.0</div>
         </div>
     </div>
-<div id="settings-overlay" class="settings-overlay hidden">
-        </div>
 
     <div id="toast-container" class="toast-container hidden">
         <span class="material-icons-round">check_circle</span>
         <span id="toast-message">Copied to clipboard</span>
     </div>
-       <nav class="bottom-nav glass">
+
+    <nav class="bottom-nav glass">
         <button class="nav-item active" data-target="view-home">
             <span class="material-icons-round">home</span>
             <span class="nav-label">Home</span>
@@ -192,7 +176,6 @@
     </nav>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <script src="script.js"></script>
 </body>
 </html>

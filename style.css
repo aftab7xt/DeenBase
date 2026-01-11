@@ -765,7 +765,7 @@ input:checked + .slider:before {
 
 .reader-action-bar {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 64px); /* Added 8px spacing from nav */
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 20px); /* Added 8px spacing from nav */
     left: 0px;  /* Inset from edges */
     right: 0px; /* Inset from edges */
     height: 55px;

@@ -50,7 +50,7 @@ body.light-theme {
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Archivo', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
     height: 100vh;
@@ -345,8 +345,8 @@ body.light-theme .toast-container span {
 
 /* Update Logo Text Style */
 .app-logo {
-    font-family: 'Cinzel', serif; /* New Font */
-    font-weight: 600;             /* SemiBold */
+    font-family: 'Archivo+Black' /* New Font */
+    font-weight: 400;             /* SemiBold */
     font-size: 1.4rem;            /* Slightly larger to stand out */
     letter-spacing: 0.05em;       /* Adds elegance */
     color: var(--text-primary);

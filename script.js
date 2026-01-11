@@ -1,34 +1,34 @@
+const appHeader = document.querySelector('.app-header');
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view');
     
-    // Search Elements (Update this block)
-    const searchBtn = document.getElementById('search-btn');
-    const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results');
-    const searchHistoryContainer = document.getElementById('search-history-container'); // NEW
-    const recentSearchesList = document.getElementById('recent-searches-list');         // NEW
-
-    // [CRITICAL FIX] Updated ID to match your new HTML
-    const readerView = document.getElementById('view-reader'); 
+    // Header Elements
+    const headerBackBtn = document.getElementById('header-back-btn');
+    const headerLogo = document.getElementById('header-logo');
     
+// Search Elements
+const searchBtn = document.getElementById('search-btn-view');
+const searchInput = document.getElementById('search-input-view');
+const clearSearchBtn = document.getElementById('clear-search-view');
+    const searchResults = document.getElementById('search-results');
+    const searchHistoryContainer = document.getElementById('search-history-container');
+    const recentSearchesList = document.getElementById('recent-searches-list');
+
+    // Reader Elements
+    const readerView = document.getElementById('view-reader'); 
     const readerContent = document.getElementById('reader-content');
-    const backBtn = document.getElementById('back-to-results');
     const loader = document.getElementById('loader');
 
     // Home Elements
     const hotdContainer = document.getElementById('hotd-container');
-    const dateBadge = document.getElementById('hero-date'); // Updated for Home Redesign
+    const dateBadge = document.getElementById('hero-date');
 
-    // Library Elements
-    const segments = document.querySelectorAll('.segment');
-    const libraryTabs = document.querySelectorAll('.library-tab');
-    const historyList = document.getElementById('history-list');
-    const bookmarksList = document.getElementById('bookmarks-list');
-    const historyEmpty = document.getElementById('history-empty');
-    const bookmarksEmpty = document.getElementById('bookmarks-empty');
-    const clearHistoryBtn = document.getElementById('clear-history-btn');
+// Library Elements (simplified - bookmarks only)
+const bookmarksList = document.getElementById('bookmarks-list');
+const bookmarksEmpty = document.getElementById('bookmarks-empty');
 
     // Settings Elements
     const settingsOverlay = document.getElementById('settings-overlay');
@@ -50,16 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const KEY_BOOKMARKS = 'deenbase_bookmarks';
     const KEY_SETTINGS = 'deenbase_settings';
     
-        // --- STEP 27: REGISTER SERVICE WORKER ---
+    // --- REGISTER SERVICE WORKER ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
             .then(() => console.log('Service Worker Registered'))
             .catch((err) => console.log('Service Worker Failed', err));
     }
 
-
     // --- STATE ---
-    let userSettings = { theme: 'dark', fsArabic: 1.6, fsEnglish: 1.0 };
+    let userSettings = { theme: 'dark', oled: false, font: 'Amiri', fsArabic: 1.6, fsEnglish: 1.0 };
     let lastActiveViewId = 'view-home'; 
 
     // --- INIT ---
@@ -80,17 +79,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applySettings() {
+        // 1. Theme Logic
         if (userSettings.theme === 'light') {
             document.body.classList.add('light-theme');
+            document.body.classList.remove('oled-mode'); 
             themeLabel.textContent = "Light Mode";
             themeToggle.querySelector('span').textContent = 'light_mode';
+            
+            const oledContainer = document.getElementById('oled-container');
+            if(oledContainer) {
+                oledContainer.style.opacity = '0.5';
+                oledContainer.style.pointerEvents = 'none';
+            }
         } else {
             document.body.classList.remove('light-theme');
             themeLabel.textContent = "Dark Mode";
             themeToggle.querySelector('span').textContent = 'dark_mode';
+            
+            const oledContainer = document.getElementById('oled-container');
+            if(oledContainer) {
+                oledContainer.style.opacity = '1';
+                oledContainer.style.pointerEvents = 'auto';
+            }
+
+            // 2. OLED Logic
+            const oledSwitch = document.getElementById('oled-toggle');
+            if (userSettings.oled) {
+                document.body.classList.add('oled-mode');
+                if(oledSwitch) oledSwitch.checked = true;
+            } else {
+                document.body.classList.remove('oled-mode');
+                if(oledSwitch) oledSwitch.checked = false;
+            }
         }
+
+        // 3. Font Logic
         document.documentElement.style.setProperty('--fs-arabic', userSettings.fsArabic + 'rem');
         document.documentElement.style.setProperty('--fs-english', userSettings.fsEnglish + 'rem');
+        
+        const arabicElements = document.querySelectorAll('.hadith-arabic, .compact-arabic, .greeting-arabic');
+        arabicElements.forEach(el => {
+            el.style.fontFamily = `'${userSettings.font}', serif`;
+        });
+        
+        document.querySelectorAll('[data-font]').forEach(btn => {
+            if(btn.dataset.font === userSettings.font) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
     }
 
     function saveSettings() {
@@ -98,6 +133,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupSettingsEvents() {
+        // OLED Toggle
+        const oledToggle = document.getElementById('oled-toggle');
+        if(oledToggle) {
+            oledToggle.addEventListener('change', (e) => {
+                userSettings.oled = e.target.checked;
+                applySettings();
+                saveSettings();
+            });
+        }
+
+        // Font Style Buttons
+        const fontBtns = document.querySelectorAll('[data-font]');
+        fontBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                userSettings.font = btn.dataset.font;
+                applySettings();
+                saveSettings();
+            });
+        });
+
+        // Menu Open/Close
         const settingsBtn = document.getElementById('settings-nav-btn');
         if (settingsBtn) {
             settingsBtn.addEventListener('click', () => {
@@ -109,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === settingsOverlay) settingsOverlay.classList.add('hidden');
         });
 
+        // Theme & Sliders
         themeToggle.addEventListener('click', () => {
             userSettings.theme = userSettings.theme === 'dark' ? 'light' : 'dark';
             applySettings();
@@ -126,14 +183,21 @@ document.addEventListener('DOMContentLoaded', () => {
             saveSettings();
         });
     }
-    // --- STEP 17: HANDLE NATIVE BACK GESTURE ---
+
+    // --- HANDLE NATIVE BACK GESTURE ---
     window.addEventListener('popstate', (event) => {
-        // If the browser goes "back" and the reader is open, we close it
         const readerView = document.getElementById('view-reader');
         if (readerView && readerView.classList.contains('active-view')) {
             hideReader();
         }
     });
+
+    // --- HANDLE HEADER BACK BUTTON ---
+    if (headerBackBtn) {
+        headerBackBtn.addEventListener('click', () => {
+            history.back(); // Triggers popstate
+        });
+    }
 
     // --- 2. NAVIGATION ---
     function setupNavigation() {
@@ -142,44 +206,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const clickedBtn = e.target.closest('.nav-item');
                 const targetId = clickedBtn.getAttribute('data-target');
 
-                if (targetId) {
-                    lastActiveViewId = targetId;
+if (targetId) {
+    lastActiveViewId = targetId;
+    
+    // No need to show/hide header search anymore
+    // Search input is now inside the view itself
+
                     navItems.forEach(nav => nav.classList.remove('active'));
                     clickedBtn.classList.add('active');
-
                     views.forEach(view => view.classList.remove('active-view'));
                     document.getElementById(targetId)?.classList.add('active-view');
-                                        if(targetId === 'view-library') {
-                        renderHistory(); renderBookmarks();
-                    }
-                    // ADD THIS:
+                    
                     if(targetId === 'view-search' && searchInput.value === '') {
                         renderRecentSearches();
                     }
-
-                    if(targetId === 'view-library') {
-                        renderHistory(); renderBookmarks();
-                    }
+                   if(targetId === 'view-library') {
+    renderBookmarks(); // Only render bookmarks now
+}
                 }
             });
         });
     }
 
-    // --- 3. LIBRARY ---
-    function setupLibrary() {
-        segments.forEach(seg => {
-            seg.addEventListener('click', () => {
-                segments.forEach(s => s.classList.remove('active'));
-                seg.classList.add('active');
-                libraryTabs.forEach(t => t.classList.remove('active-tab'));
-                document.getElementById(`tab-${seg.dataset.tab}`).classList.add('active-tab');
-            });
-        });
-        clearHistoryBtn.addEventListener('click', () => {
-            localStorage.removeItem(KEY_HISTORY);
-            renderHistory();
-        });
-    }
+// --- 3. LIBRARY ---
+function setupLibrary() {
+    // Library now only shows bookmarks, no tabs needed
+    // Remove all tab switching logic
+}
 
     // --- 4. STORAGE HELPERS ---
     function getStoredData(key) {
@@ -207,16 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 5. RENDERERS ---
-    function renderHistory() {
-        const history = getStoredData(KEY_HISTORY);
-        if (history.length === 0) {
-            historyList.innerHTML = ''; historyEmpty.classList.remove('hidden');
-        } else {
-            historyEmpty.classList.add('hidden');
-            historyList.innerHTML = generateListHTML(history, 'history');
-            attachListListeners('history', history);
-        }
-    }
+
     function renderBookmarks() {
         const bookmarks = getStoredData(KEY_BOOKMARKS);
         if (bookmarks.length === 0) {
@@ -227,9 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
             attachListListeners('bookmark', bookmarks);
         }
     }
-        // --- STEP 18: RENDER SEARCH HISTORY ---
     function renderRecentSearches() {
-        const history = getStoredData(KEY_HISTORY).slice(0, 5); // Get top 5 items
+        const history = getStoredData(KEY_HISTORY).slice(0, 10); 
         
         if (history.length === 0) {
             searchHistoryContainer.classList.add('hidden');
@@ -237,8 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         searchHistoryContainer.classList.remove('hidden');
-        
-        // We reuse the generator but give it a unique class 'recent-item' to avoid conflicts
         let html = '';
         history.forEach((hadith, index) => {
             const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
@@ -252,34 +293,26 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         });
         recentSearchesList.innerHTML = html;
-
-        // Attach listeners specifically to these recent items
         const items = recentSearchesList.querySelectorAll('.recent-item');
         items.forEach(item => {
             item.addEventListener('click', () => {
                 const index = item.getAttribute('data-index');
                 openReader(history[index]);
-                addToHistory(history[index]); // Move to top of history
+                addToHistory(history[index]);
             });
         });
     }
 
-    function generateListHTML(list, type) {
-        let html = '';
-        list.forEach((hadith, index) => {
-            const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
-            const preview = cleanText.substring(0, 60) + '...';
-            const icon = type === 'history' ? 'history' : 'bookmark';
-            html += `
-                <div class="result-item ${type}-item" data-index="${index}">
-                    <div class="result-ref">Bukhari ${hadith.hadithNumber}</div>
-                    <div class="result-preview">${preview}</div>
-                    <span class="material-icons-round cache-badge">${icon}</span>
-                </div>
-            `;
-        });
-        return html;
-    }
+function generateListHTML(list, type) {
+    let html = '';
+    list.forEach((hadith, index) => {
+        const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
+        const preview = cleanText.substring(0, 60) + '...';
+        const icon = type === 'history' ? 'history' : 'bookmark';
+        html += `<div class="result-item ${type}-item" data-index="${index}"><div class="result-ref">Bukhari ${hadith.hadithNumber}</div><div class="result-preview">${preview}</div><span class="material-icons-round cache-badge">${icon}</span></div>`;
+    });
+    return html;
+}
     function attachListListeners(type, data) {
         document.querySelectorAll(`.${type}-item`).forEach(item => {
             item.addEventListener('click', () => {
@@ -352,32 +385,53 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupSearch() {
         searchBtn.addEventListener('click', performSearch);
         
-        // Update: Handle input changes to toggle history/results
         searchInput.addEventListener('input', (e) => {
             if (e.target.value.trim() === '') {
                 searchResults.innerHTML = '';
                 renderRecentSearches();
             }
         });
+        // Clear Recent button
+    const clearRecentBtn = document.getElementById('clear-recent-btn');
+    if (clearRecentBtn) {
+        clearRecentBtn.addEventListener('click', () => {
+            localStorage.removeItem(KEY_HISTORY);
+            searchHistoryContainer.classList.add('hidden');
+            showToast("Recent searches cleared");
+        });
+    }
+            // Inside setupSearch()
+    if (clearSearchBtn) {
+        // 1. Show/Hide X based on typing
+        searchInput.addEventListener('input', (e) => {
+            if (e.target.value.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+        });
+
+        // 2. Clear input when X is clicked
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            searchResults.innerHTML = '';
+            renderRecentSearches(); // Re-show history
+            searchInput.focus();
+        });
+    }
 
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
-        
-        // In-app back button
-        backBtn.addEventListener('click', () => {
-            history.back(); 
-        });
     }
 
     async function performSearch() {
         const query = searchInput.value.trim();
         if (!query) {
-            renderRecentSearches(); // Show history if empty
+            renderRecentSearches();
             return;
         }
         
-        // Hide history when searching
         if(searchHistoryContainer) searchHistoryContainer.classList.add('hidden');
-        
         showLoader(); hideReader(); searchResults.innerHTML = '';
 
         try {
@@ -399,10 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSearchResults(hadiths) {
         searchResults.innerHTML = generateListHTML(hadiths, 'result');
-        
-        // FIX: Only select items INSIDE the searchResults container
         const items = searchResults.querySelectorAll('.result-item');
-        
         items.forEach((item, idx) => {
             item.addEventListener('click', () => {
                 const selected = hadiths[idx];
@@ -412,39 +463,95 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- 8. READER LOGIC (UPDATED) ---
     function openReader(hadith) {
         const currentView = document.querySelector('.active-view');
         if(currentView && currentView.id !== 'view-reader') {
             lastActiveViewId = currentView.id;
         }
 
-        // STEP 17: Push a new state to history so the back button works
-        // We add a hash '#reader' so the URL changes slightly
         history.pushState({ view: 'reader' }, "Reader", "#reader");
-
         readerContent.innerHTML = generateCardHTML(hadith, 'reader-card');
         attachCardListeners(hadith, 'reader-card');
+    
+    // === ADD BOTTOM BUTTON LISTENERS (after HTML is in DOM) ===
+    setTimeout(() => {
+        const langBtnBottom = document.querySelector('.lang-toggle-bottom');
+        const copyBtnBottom = document.querySelector('.copy-btn-bottom');
+        const shareBtnBottom = document.querySelector('.share-btn-bottom');
+        
+        if (langBtnBottom) {
+            let showingEnglish = true;
+            langBtnBottom.addEventListener('click', () => {
+                console.log('BOTTOM BUTTON CLICKED! showingEnglish =', showingEnglish);
+                
+                const enTextElement = document.querySelector('.hadith-english');
+                const urTextElement = document.querySelector('.hadith-urdu');
+                
+                if (showingEnglish) {
+                    console.log('Switching to URDU');
+                    enTextElement.style.display = 'none'; 
+                    urTextElement.style.display = 'block';
+                    langBtnBottom.querySelector('.action-label').textContent = 'URDU';
+                    langBtnBottom.setAttribute('data-lang', 'URDU');
+                    showingEnglish = false;
+                } else {
+                    console.log('Switching to ENGLISH');
+                    enTextElement.style.display = 'block'; 
+                    urTextElement.style.display = 'none';
+                    langBtnBottom.querySelector('.action-label').textContent = 'ENG';
+                    langBtnBottom.setAttribute('data-lang', 'ENG');
+                    showingEnglish = true;
+                }
+            });
+        }
+        
+        if (copyBtnBottom) {
+            copyBtnBottom.addEventListener('click', () => {
+                console.log('COPY BUTTON CLICKED!');
+                const textToCopy = `Sahih al-Bukhari ${hadith.hadithNumber}\n\n${hadith.hadithArabic}\n\n${hadith.hadithEnglish}\n\n(Via DeenBase)`;
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => showToast("Copied"))
+                    .catch(() => showToast("Failed"));
+            });
+        }
+        
+        if (shareBtnBottom) {
+            shareBtnBottom.addEventListener('click', () => {
+                console.log('SHARE BUTTON CLICKED!');
+                shareAsImage('reader-card');
+            });
+        }
+    }, 100); // Wait 100ms for DOM to fully render
 
         views.forEach(view => view.classList.remove('active-view'));
-        const readerView = document.getElementById('view-reader');
-        if(readerView) readerView.classList.add('active-view');
+        readerView.classList.add('active-view');
+        
+// --- FIX: HIDE SEARCH BAR IN READER ---
+if (appHeader) appHeader.classList.add('reader-active');
+// headerSearch no longer exists
         
         document.getElementById('main-container').scrollTop = 0;
     }
 
-
     function hideReader() {
-        if(readerView) readerView.classList.remove('active-view');
-        
-        // Go back to previous view
-        const prevView = document.getElementById(lastActiveViewId);
-        if(prevView) prevView.classList.add('active-view');
-        
-        // Update Bottom Nav
-        navItems.forEach(nav => nav.classList.remove('active'));
-        const navBtn = document.querySelector(`[data-target="${lastActiveViewId}"]`);
-        if(navBtn) navBtn.classList.add('active');
+        readerView.classList.add('closing');
+
+        setTimeout(() => {
+            readerView.classList.remove('active-view', 'closing');
+            const prevView = document.getElementById(lastActiveViewId);
+            if(prevView) prevView.classList.add('active-view');
+            
+// --- FIX: RESTORE HEADER STATE ---
+if (appHeader) appHeader.classList.remove('reader-active');
+// headerSearch no longer exists
+
+            navItems.forEach(nav => nav.classList.remove('active'));
+            const navBtn = document.querySelector(`[data-target="${lastActiveViewId}"]`);
+            if(navBtn) navBtn.classList.add('active');
+        }, 300);
     }
+
 
     // --- 9. CARD GENERATOR ---
     function generateCardHTML(hadith, uniqueId) {
@@ -481,56 +588,79 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="hadith-arabic">${arabicText}</div>
                 <div class="hadith-english">${englishText}</div>
                 <div class="hadith-urdu">${urduText}</div>
-            </div>
-        `;
-    }
+</div>
+        
+        <div class="reader-action-bar glass">
+            <button class="action-bar-btn share-btn-bottom" title="Share Image">
+                <span class="material-icons-round">ios_share</span>
+                <span class="action-label">Share</span>
+            </button>
+            <button class="action-bar-btn copy-btn-bottom" title="Copy Text">
+                <span class="material-icons-round">content_copy</span>
+                <span class="action-label">Copy</span>
+            </button>
+            <button class="action-bar-btn lang-toggle-bottom" data-lang="ENG">
+                <span class="material-icons-round">translate</span>
+                <span class="action-label">ENG</span>
+            </button>
+        </div>
+    `;
+}
 
     function attachCardListeners(hadith, cardId) {
-        const card = document.getElementById(cardId);
-        if(!card) return;
+    const card = document.getElementById(cardId);
+    if(!card) return;
 
-        // Language
-        const langBtn = card.querySelector('.lang-toggle');
-        const enText = card.querySelector('.hadith-english');
-        const urText = card.querySelector('.hadith-urdu');
-        langBtn.addEventListener('click', () => {
-            if (enText.style.display === 'none') {
-                enText.style.display = 'block'; urText.style.display = 'none';
-                langBtn.textContent = 'ENG'; langBtn.style.background = 'rgba(255,255,255,0.1)';
-            } else {
-                enText.style.display = 'none'; urText.style.display = 'block';
-                langBtn.textContent = 'URDU'; langBtn.style.background = 'var(--accent-color)'; langBtn.style.color = '#0f172a';
-            }
-        });
+    // Language (TOP button)
+    const langBtn = card.querySelector('.lang-toggle');
+    const enText = card.querySelector('.hadith-english');
+    const urText = card.querySelector('.hadith-urdu');
+    langBtn.addEventListener('click', () => {
+        if (enText.style.display === 'none') {
+            enText.style.display = 'block'; 
+            urText.style.display = 'none';
+            langBtn.textContent = 'ENG'; 
+            langBtn.style.background = 'rgba(255,255,255,0.1)';
+        } else {
+            enText.style.display = 'none'; 
+            urText.style.display = 'block';
+            langBtn.textContent = 'URDU'; 
+            langBtn.style.background = 'var(--accent-color)'; 
+            langBtn.style.color = '#0f172a';
+        }
+    });
 
-        // Bookmark
-        const bmBtn = card.querySelector('.bookmark-btn');
-        const bmIcon = bmBtn.querySelector('.material-icons-round');
-        bmBtn.addEventListener('click', () => {
-            const added = toggleBookmark(hadith);
-            if(added) {
-                bmIcon.textContent = 'bookmark'; bmBtn.classList.add('bookmarked');
-                showToast("Saved to Bookmarks");
-            } else {
-                bmIcon.textContent = 'bookmark_border'; bmBtn.classList.remove('bookmarked');
-                showToast("Removed from Bookmarks");
-            }
-        });
+    // Bookmark (TOP button)
+    const bmBtn = card.querySelector('.bookmark-btn');
+    const bmIcon = bmBtn.querySelector('.material-icons-round');
+    bmBtn.addEventListener('click', () => {
+        const added = toggleBookmark(hadith);
+        if(added) {
+            bmIcon.textContent = 'bookmark'; 
+            bmBtn.classList.add('bookmarked');
+            showToast("Saved to Bookmarks");
+        } else {
+            bmIcon.textContent = 'bookmark_border'; 
+            bmBtn.classList.remove('bookmarked');
+            showToast("Removed from Bookmarks");
+        }
+    });
 
-        // Copy
-        const copyBtn = card.querySelector('.copy-btn');
-        copyBtn.addEventListener('click', () => {
-            const textToCopy = `Sahih al-Bukhari ${hadith.hadithNumber}\n\n${hadith.hadithArabic}\n\n${hadith.hadithEnglish}\n\n(Via DeenBase)`;
-            navigator.clipboard.writeText(textToCopy).then(() => showToast("Copied")).catch(() => showToast("Failed"));
-        });
+    // Copy (TOP button)
+    const copyBtn = card.querySelector('.copy-btn');
+    copyBtn.addEventListener('click', () => {
+        const textToCopy = `Sahih al-Bukhari ${hadith.hadithNumber}\n\n${hadith.hadithArabic}\n\n${hadith.hadithEnglish}\n\n(Via DeenBase)`;
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => showToast("Copied"))
+            .catch(() => showToast("Failed"));
+    });
 
-        // Share
-        const shareBtn = card.querySelector('.share-btn');
-        shareBtn.addEventListener('click', () => shareAsImage(cardId));
-    }
+    // Share (TOP button)
+    const shareBtn = card.querySelector('.share-btn');
+    shareBtn.addEventListener('click', () => shareAsImage(cardId));
+}
 
     // --- 10. SHARE IMAGE ---
-    // --- STEP 26: SHARE IMAGE (Brand Update) ---
     async function shareAsImage(elementId) {
         if (typeof html2canvas === 'undefined') {
             alert("Error: html2canvas library missing. Check internet/script tag.");
@@ -543,31 +673,25 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast("Generating image...");
 
         try {
-            // 1. Create a clone to style specifically for the image
             const clone = element.cloneNode(true);
             
-            // 2. Set the branding styles for the export
             clone.style.position = 'fixed';
             clone.style.top = '-9999px';
             clone.style.left = '0';
             clone.style.width = '600px'; 
             clone.style.maxWidth = '600px';
             
-            // BRAND COLORS: Deep Green Background & Off-White Text
             clone.style.backgroundColor = '#0F222D'; 
             clone.style.color = '#F0F7F4';
             
-            // Add a Premium Gold Border
             clone.style.border = '2px solid #CCA352';
             clone.style.borderRadius = '20px';
             
             clone.style.padding = '40px';
             
-            // Remove the interactive buttons (Copy, Share, etc.) from the image
             const controls = clone.querySelector('.card-controls');
             if(controls) controls.remove();
 
-            // 3. Add a branded footer
             const footer = document.createElement('div');
             footer.innerHTML = `
                 <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:30px; padding-top:20px; border-top:1px solid rgba(204, 163, 82, 0.3);">
@@ -578,17 +702,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.body.appendChild(clone);
 
-            // 4. Capture the image
             const canvas = await html2canvas(clone, {
-                scale: 2, // High resolution
-                backgroundColor: null, // Transparent around the border radius
+                scale: 2, 
+                backgroundColor: null, 
                 useCORS: true,
                 logging: false 
             });
 
             document.body.removeChild(clone);
 
-            // 5. Share or Download
             canvas.toBlob(async (blob) => {
                 if (!blob) {
                     showToast("Image generation failed");
@@ -605,7 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             text: 'Read this hadith on DeenBase.'
                         });
                     } catch (err) {
-                        // User cancelled share
                         console.log('Share cancelled');
                     }
                 } else {
@@ -618,7 +739,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Error generating image");
         }
     }
-
 
     function downloadImage(canvas) {
         const link = document.createElement('a');
@@ -638,7 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showLoader() { loader.classList.remove('hidden'); }
     function hideLoader() { loader.classList.add('hidden'); }
 
-    // --- HOME CHIPS TRIGGER ---
+    // --- CHIPS TRIGGER ---
     window.triggerTopic = function(keyword) {
         const searchNav = document.querySelector('[data-target="view-search"]');
         if(searchNav) searchNav.click();
@@ -649,19 +769,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if(searchBtn) searchBtn.click();
         }
     };
-    // --- STEP 16: LOGO CLICK ---
+    
+    // --- HOME LOGO SCROLL ---
     const logoHeader = document.querySelector('.logo-wrapper');
     if (logoHeader) {
         logoHeader.addEventListener('click', () => {
-            // We simply click the hidden logic of the Home Navigation button
             const homeBtn = document.querySelector('[data-target="view-home"]');
             if (homeBtn) homeBtn.click();
-            
-            // Optional: Scroll to top of home
             const container = document.getElementById('main-container');
             if(container) container.scrollTop = 0;
         });
     }
 
-    console.log("DeenBase: Step 14 (Final Complete) Loaded");
+    console.log("DeenBase: v1.0 Loaded");
 });

@@ -109,47 +109,47 @@
         <section id="view-reader" class="view">
             <div id="reader-content" style="padding-top: 20px;"></div>
         </section>
-    </main>
-
-    <div id="settings-overlay" class="settings-overlay hidden">
-        <div class="settings-card">
-            <div class="settings-header">
-                <h3>Settings</h3>
-                <button id="close-settings" class="icon-btn">
-                    <span class="material-icons-round">close</span>
+        <section id="view-settings" class="view">
+            <div class="settings-content">
+                <h2 style="margin-bottom: 24px; font-size: 1.8rem;">Settings</h2>
+                
+                <button id="theme-toggle" class="theme-btn" style="margin-bottom: 24px;">
+                    <span class="material-icons-round">dark_mode</span>
+                    <span id="theme-label">Dark Mode</span>
                 </button>
-            </div>
-            <button id="theme-toggle" class="theme-btn" style="margin-bottom: 24px;">
-                <span class="material-icons-round">dark_mode</span>
-                <span id="theme-label">Dark Mode</span>
-            </button>
-            <div class="setting-item" id="oled-container">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <label style="margin:0;">OLED True Black</label>
-                    <label class="switch">
-                        <input type="checkbox" id="oled-toggle">
-                        <span class="slider round"></span>
-                    </label>
+                
+                <div class="setting-item" id="oled-container">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label style="margin:0;">OLED True Black</label>
+                        <label class="switch">
+                            <input type="checkbox" id="oled-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <div class="setting-item">
-                <label>Arabic Font Style</label>
-                <div class="segmented-control" style="margin-bottom:0;">
-                    <button class="segment active" data-font="Amiri">Classic</button>
-                    <button class="segment" data-font="Scheherazade New">Modern</button>
+                
+                <div class="setting-item">
+                    <label>Arabic Font Style</label>
+                    <div class="segmented-control" style="margin-bottom:0;">
+                        <button class="segment active" data-font="Amiri">Classic</button>
+                        <button class="segment" data-font="Scheherazade New">Modern</button>
+                    </div>
                 </div>
+                
+                <div class="setting-item">
+                    <label>Arabic Font Size</label>
+                    <input type="range" id="fs-arabic" min="1" max="3" step="0.1" value="1.6">
+                </div>
+                
+                <div class="setting-item">
+                    <label>Translation Font Size</label>
+                    <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1">
+                </div>
+                
+                <div class="setting-footer">DeenBase v3.1</div>
             </div>
-            <div class="setting-item">
-                <label>Arabic Font Size</label>
-                <input type="range" id="fs-arabic" min="1" max="3" step="0.1" value="1.6">
-            </div>
-            <div class="setting-item">
-                <label>Translation Font Size</label>
-                <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1">
-            </div>
-            <div class="setting-footer">DeenBase v3.0</div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <div id="toast-container" class="toast-container hidden">
         <span class="material-icons-round">check_circle</span>
@@ -169,10 +169,10 @@
             <span class="material-icons-round">collections_bookmark</span>
             <span class="nav-label">Library</span>
         </button>
-        <button class="nav-item" id="settings-nav-btn">
-            <span class="material-icons-round">settings</span>
-            <span class="nav-label">Settings</span>
-        </button>
+<button class="nav-item" data-target="view-settings">
+    <span class="material-icons-round">settings</span>
+    <span class="nav-label">Settings</span>
+</button>
     </nav>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

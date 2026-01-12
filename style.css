@@ -865,7 +865,7 @@ input:checked + .slider:before {
 }
 /* Push reader content up so it's not hidden behind action bar */
 #view-reader #reader-content {
-    padding-bottom: 80px; /* Reduced from 140px */
+    padding-bottom: 150px; /* Reduced from 140px */
 }
 /* ===========================
    Hide Old Top Buttons in Reader

@@ -132,57 +132,63 @@ const bookmarksEmpty = document.getElementById('bookmarks-empty');
         localStorage.setItem(KEY_SETTINGS, JSON.stringify(userSettings));
     }
 
-    function setupSettingsEvents() {
-        // OLED Toggle
-        const oledToggle = document.getElementById('oled-toggle');
-        if(oledToggle) {
-            oledToggle.addEventListener('change', (e) => {
-                userSettings.oled = e.target.checked;
-                applySettings();
-                saveSettings();
-            });
-        }
-
-        // Font Style Buttons
-        const fontBtns = document.querySelectorAll('[data-font]');
-        fontBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                userSettings.font = btn.dataset.font;
-                applySettings();
-                saveSettings();
-            });
-        });
-
-        // Menu Open/Close
-        const settingsBtn = document.getElementById('settings-nav-btn');
-        if (settingsBtn) {
-            settingsBtn.addEventListener('click', () => {
-                settingsOverlay.classList.remove('hidden');
-            });
-        }
-        closeSettingsBtn.addEventListener('click', () => settingsOverlay.classList.add('hidden'));
-        settingsOverlay.addEventListener('click', (e) => {
-            if (e.target === settingsOverlay) settingsOverlay.classList.add('hidden');
-        });
-
-        // Theme & Sliders
-        themeToggle.addEventListener('click', () => {
-            userSettings.theme = userSettings.theme === 'dark' ? 'light' : 'dark';
+function setupSettingsEvents() {
+    // OLED Toggle
+    const oledToggle = document.getElementById('oled-toggle');
+    if(oledToggle) {
+        oledToggle.addEventListener('change', (e) => {
+            userSettings.oled = e.target.checked;
             applySettings();
             saveSettings();
         });
+    }
 
+    // Font Style Buttons
+    const fontBtns = document.querySelectorAll('[data-font]');
+    fontBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            userSettings.font = btn.dataset.font;
+            applySettings();
+            saveSettings();
+        });
+    });
+
+    // Theme Toggle (FIXED - removed overlay code)
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            console.log('Theme toggle clicked!'); // DEBUG
+            console.log('Current theme:', userSettings.theme); // DEBUG
+            
+            userSettings.theme = userSettings.theme === 'dark' ? 'light' : 'dark';
+            
+            console.log('New theme:', userSettings.theme); // DEBUG
+            
+            applySettings();
+            saveSettings();
+        });
+    }
+
+    // Font Size Sliders
+    const sliderArabic = document.getElementById('fs-arabic');
+    const sliderEnglish = document.getElementById('fs-english');
+    
+    if (sliderArabic) {
         sliderArabic.addEventListener('input', (e) => {
             userSettings.fsArabic = e.target.value;
             applySettings();
             saveSettings();
         });
+    }
+    
+    if (sliderEnglish) {
         sliderEnglish.addEventListener('input', (e) => {
             userSettings.fsEnglish = e.target.value;
             applySettings();
             saveSettings();
         });
     }
+}
 
     // --- HANDLE NATIVE BACK GESTURE ---
     window.addEventListener('popstate', (event) => {

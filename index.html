@@ -58,20 +58,23 @@
 <section id="view-search" class="view">
     <!-- Add Search Bar HERE inside the view -->
 <div class="search-container">
-    <div class="input-wrapper" style="position: relative; display: flex; align-items: stretch; gap: 8px; height: 46px; margin-bottom: 0;">
-            <div style="position: relative; flex: 1; display: flex; align-items: center;">
-                <input type="number" id="search-input-view" placeholder="Enter Hadith Number..." class="glass-input" 
-                       style="width: 100%; height: 100%; padding-right: 45px; margin: 0;">
-                <button id="clear-search-view" class="hidden" 
-                        style="position: absolute; right: 12px; background: none; border: none; color: var(--text-secondary); opacity: 0.5; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; width: 24px; height: 24px;">
-                    <span class="material-icons-round" style="font-size: 20px;">close</span>
-                </button>
-            </div>
-            <button id="search-btn-view" class="action-btn" style="height: 100%; padding: 0 15px;">
-                <span class="material-icons-round">search</span>
+    <div class="input-wrapper" style="position: relative; display: flex; align-items: center; gap: 8px; margin-bottom: 0;">
+        
+        <div style="position: relative; flex: 1; display: flex; align-items: center; height: 45px;">
+            <input type="number" id="search-input-view" placeholder="Enter Hadith Number..." class="glass-input" 
+                   style="width: 100%; height: 100%; padding-right: 45px; margin: 0;">
+            <button id="clear-search-view" class="hidden" 
+                    style="position: absolute; right: 12px; background: none; border: none; color: var(--text-secondary); opacity: 0.5; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; width: 24px; height: 24px;">
+                <span class="material-icons-round" style="font-size: 20px;">close</span>
             </button>
         </div>
+
+        <button id="search-btn-view" class="action-btn" style="height: 70px; width: 50px; padding: 0; display: flex; align-items: center; justify-content: center;">
+            <span class="material-icons-round">search</span>
+        </button>
     </div>
+</div>
+
     
     <div id="loader" class="ios-spinner hidden">
         <div class="spinner-blade"></div><div class="spinner-blade"></div>
@@ -146,7 +149,7 @@
                     <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1">
                 </div>
                 
-                <div class="setting-footer">DeenBase v3.1</div>
+                <div class="setting-footer">DeenBase v3.1.1</div>
             </div>
         </section>
     </main>

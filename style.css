@@ -4,7 +4,7 @@
     --brand-accent: #FFFFFF;      /* Pure White */
     
     /* --- DARK MODE --- */
-    --bg-color: #000000;          /* True Black (OLED friendly) */
+    --bg-color: #0c0d0c;
     --text-primary: #FFFFFF;      /* Pure White */
     --text-secondary: #8E8E93;    /* iOS System Gray */
     
@@ -296,6 +296,26 @@ body.light-theme .bottom-nav { background: rgba(255,255,255,0.9); }
     border-radius: 50px; /* Pill shape for active state */
     padding: 8px 12px;
     transition: all 0.3s ease;
+}
+/* Fix mobile tap highlight to match pill shape */
+.nav-item {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    outline: none;
+}
+
+.nav-item:focus {
+    outline: none;
+}
+
+.nav-item:active {
+    background: rgba(255, 255, 255, 0.25); /* Stronger pill background on press */
+}
+
+body.light-theme .nav-item:active {
+    background: rgba(0, 0, 0, 0.12);
 }
 .nav-item.active {
     color: var(--text-primary); /* White/primary text when active */

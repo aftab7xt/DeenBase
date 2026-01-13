@@ -11,7 +11,7 @@
     --accent-color: #FFFFFF;      /* White accents */
     
     /* Glassmorphism - Dark */
-    --glass-bg: rgba(28, 28, 30, 0.8);      /* Translucent dark gray */
+    --glass-bg: rgba(28, 28, 30, 0.3);      /* Translucent dark gray */
     --glass-border: rgba(255, 255, 255, 0.12); /* Subtle white border */
     --glass-blur: 20px;                      /* Stronger blur for premium feel */
     --card-bg: rgba(255, 255, 255, 0.05);   /* Very subtle white tint */
@@ -36,7 +36,7 @@ body.light-theme {
     --accent-color: #1C1C1E;      /* Black accents in light mode */
     
     /* Glassmorphism - Light */
-    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.3);
     --glass-border: rgba(0, 0, 0, 0.08);
     --card-bg: rgba(0, 0, 0, 0.03);
 }
@@ -78,17 +78,42 @@ h1, h2, h3 { font-weight: 600; }
     -webkit-backdrop-filter: blur(var(--glass-blur)); /* For Safari/iOS */
     border-top: 1px solid var(--glass-border); 
 }
+/* --- LAYOUT FIXES (Paste this in style.css) --- */
 
-/* Main Container */
+/* 1. Reset Main Container Padding */
 #main-container {
-    flex: 1; overflow-y: auto; padding-top: var(--header-height);
-    padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom));
-    scroll-behavior: smooth; padding-left: 16px; padding-right: 16px;
+    flex: 1;
+    overflow-y: auto;
+    
+    /* FORCE content to start higher up */
+    padding-top: 10px !important; 
+    padding-bottom: 0;
+    
+    scroll-behavior: smooth;
+    padding-left: 16px;
+    padding-right: 16px;
 }
 
-.view { display: none; padding-top: 20px; animation: fadeIn 0.3s ease; }
-.view.active-view { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+/* 2. Reset View Padding */
+.view {
+    display: none;
+    
+    /* FORCE zero padding so titles align with the logo */
+    padding-top: 0 !important;
+    
+    animation: fadeIn 0.3s ease;
+}
+
+.view.active-view {
+    display: block;
+}
+
+/* 3. Page Title Tweaks */
+/* Add this to ensure the "Search" and "Library" text isn't pushing itself down */
+h2 {
+    margin-top: 0;
+    line-height: 1.2;
+}
 
 /* STEP 8: Settings Overlay */
 .settings-overlay {
@@ -117,17 +142,54 @@ h1, h2, h3 { font-weight: 600; }
     font-size: 1rem; cursor: pointer;
 }
 
-/* Range Inputs */
+/* Range Inputs - Dynamic Fill Style (REVISED) */
 input[type=range] {
-    width: 100%; -webkit-appearance: none; background: transparent;
+    width: 100%; 
+    -webkit-appearance: none; /* Critical for removing default styling */
+    background: rgba(255, 255, 255, 0.1); 
+    height: 4px; 
+    border-radius: 2px;
+    outline: none;
+    margin: 10px 0; /* Adds a little safe space */
 }
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
-    background: var(--accent-color); margin-top: -8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
+
+/* The Track - Must be transparent for JS gradient to work */
 input[type=range]::-webkit-slider-runnable-track {
-    width: 100%; height: 4px; background: var(--text-secondary); border-radius: 2px; opacity: 0.3;
+    width: 100%; 
+    height: 4px; 
+    background: transparent; 
+    border-radius: 2px; 
+    border: none;
 }
+
+/* The Thumb (Handle) - NOW FORCED SOLID WHITE */
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; 
+    height: 22px;             /* Slightly larger for easier grabbing */
+    width: 22px; 
+    border-radius: 50%;
+    
+    /* 1. Force the background color */
+    background-color: var(--accent-color) !important; 
+    
+    /* 2. Add a border to ensure it looks "solid" */
+    border: 2px solid var(--brand-primary); 
+    
+    /* 3. Ensure it sits on top */
+    position: relative;
+    z-index: 2;
+    
+    margin-top: -9px;         /* Centers thumb (22px) on track (4px) */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5); /* Stronger shadow for "pop" */
+    transition: transform 0.1s ease;
+}
+
+/* Active State (Pressing) */
+input[type=range]:active::-webkit-slider-thumb {
+    transform: scale(1.2); 
+    background-color: #FFFFFF !important; /* Extra safety for dark mode */
+}
+
 
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -156,9 +218,12 @@ body.light-theme .action-btn { color: white; }
     flex-direction: column;
     gap: 12px;
     padding: 0 10px;
-    padding-top: 0; /* ADD THIS LINE */
-    padding-bottom: 100px;
+    padding-top: 0;
+    
+    /* CHANGE: Remove the old 100px padding */
+    padding-bottom: 20px; 
 }
+
 .result-item { 
     background: var(--card-bg); 
     border: 1px solid var(--glass-border); 
@@ -280,39 +345,54 @@ body.light-theme .segment.active { background: white; box-shadow: 0 1px 3px rgba
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--glass-border);
 }
-body.light-theme .bottom-nav { background: rgba(255,255,255,0.9); }
+body.light-theme .bottom-nav { background: rgba(255,255,255,0.3); }
+/* --- NAVIGATION ITEM STYLES (Icons Only) --- */
 .nav-item { 
     background: none; 
     border: none; 
     color: var(--text-secondary); 
     display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 4px; 
+    align-items: center;     /* Vertically centers the icon */
+    justify-content: center; /* Horizontally centers the icon */
     cursor: pointer; 
-    flex: 1; /* Equal width for all items */
+    flex: 1;                 /* Equal width for all items */
     height: 100%;
-    border-radius: 50px; /* Pill shape for active state */
-    padding: 8px 12px;
+    border-radius: 50px;     /* Pill shape */
+    padding: 0;              /* Removed padding so icon centers perfectly */
     transition: all 0.3s ease;
-}
-/* Fix mobile tap highlight to match pill shape */
-.nav-item {
+    
+    /* Mobile Touch Fixes */
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
     outline: none;
+    position: relative;
+    z-index: 1;
 }
 
 .nav-item:focus {
     outline: none;
 }
 
+/* Subtle flash when you tap with your finger */
 .nav-item:active {
-    background: rgba(255, 255, 255, 0.25); /* Stronger pill background on press */
+    background: rgba(255, 255, 255, 0.1); 
 }
+
+/* --- ICON SIZING & ANIMATION --- */
+/* Bigger icons since there is no text */
+.nav-item .material-icons-round {
+    font-size: 28px; 
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy pop */
+}
+
+/* Active Icon State: Scale up and turn white */
+.nav-item.active .material-icons-round {
+    transform: scale(1.15); 
+    color: var(--text-primary);
+}
+
 
 body.light-theme .nav-item:active {
     background: rgba(0, 0, 0, 0.12);
@@ -328,6 +408,46 @@ body.light-theme .nav-item.active {
 
 .nav-item.active .material-icons-round {
     transform: scale(1.05); /* Subtle scale */
+}
+/* Sliding indicator */
+.nav-indicator {
+    position: absolute;
+    height: calc(100% - 12px); 
+    /* Remove fixed width and left - JS handles this now */
+    /* width: calc(25% - 8px);  <-- DELETE THIS */
+    /* left: 4px;               <-- DELETE THIS */
+    
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    top: 6px;
+    
+    /* Add width to the transition so it grows/shrinks if buttons aren't equal */
+    transition: left 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), 
+                width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+                
+    pointer-events: none; 
+    z-index: 0;
+}
+
+
+body.light-theme .nav-indicator {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+/* Make nav items stack above indicator */
+.nav-item {
+    position: relative;
+    z-index: 1;
+}
+
+/* Remove the old active background since indicator handles it now */
+.nav-item.active {
+    color: var(--text-primary);
+    background: transparent; /* Changed from rgba background */
+}
+
+body.light-theme .nav-item.active {
+    background: transparent; /* Changed */
 }
 /* STEP 9: Copy Button & Toast Notification */
 
@@ -347,23 +467,39 @@ body.light-theme .nav-item.active {
     font-size: 20px; /* Slightly smaller than bookmark to fit well */
 }
 
-/* Toast Notification */
+/* Toast Notification - Glassmorphism Update */
 .toast-container {
     position: fixed;
     bottom: 100px; /* Above nav bar */
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.95);
+    
+    /* GLASS EFFECT START */
+    background: var(--glass-bg); /* Use the shared glass variable */
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--glass-border);
-    padding: 12px 20px;
+    /* GLASS EFFECT END */
+    
+    padding: 12px 24px;      /* Slightly wider for elegance */
     border-radius: 50px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;               /* More breathing room between icon and text */
     z-index: 300;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    animation: toastPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3); /* Softer, deeper shadow */
+    animation: toastPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+/* Toast Exit Animation */
+@keyframes toastExit {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to { opacity: 0; transform: translate(-50%, 20px); } /* Drop down and fade out */
+}
+
+.toast-container.closing {
+    animation: toastExit 0.3s ease-in forwards;
+}
+
 body.light-theme .toast-container {
     background: rgba(255, 255, 255, 0.95);
     color: var(--text-primary);
@@ -809,13 +945,19 @@ input:checked + .slider:before {
 #view-search {
     padding-top: 20px;
 }
-
-/* Search container - ZERO margin below */
+/* Search & Results Gap Fix */
 .search-container {
-    margin-bottom: 0 !important;
+    /* Add space below the search bar */
+    margin-bottom: 16px !important; 
+    
     padding: 0;
     padding-bottom: 0 !important;
+    
+    /* Keep these to ensure full width */
+    margin-left: -15px; 
+    margin-right: -15px;
 }
+
 
 /* Force tight spacing on results */
 #search-results {
@@ -904,7 +1046,7 @@ input:checked + .slider:before {
 }
 /* Push reader content up so it's not hidden behind action bar */
 #view-reader #reader-content {
-    padding-bottom: 150px; /* Reduced from 140px */
+    padding-bottom: 73px; /* Reduced from 140px */
 }
 /* ===========================
    Hide Old Top Buttons in Reader
@@ -933,4 +1075,202 @@ body.light-theme .app-logo-img {
 /* Keep logo white in dark mode (default) */
 body:not(.light-theme) .app-logo-img {
     filter: invert(0); /* No inversion */
+}
+/* --- 1. BOUNCY BOOKMARK ANIMATION --- */
+/* This defines the "pop" motion */
+@keyframes popIn {
+    0% { transform: scale(0.8); }
+    40% { transform: scale(1.3); } /* Inflate slightly larger than normal */
+    100% { transform: scale(1); }  /* Settle back to normal size */
+}
+
+/* This applies the animation whenever the 'bookmarked' class is added */
+.bookmark-btn.bookmarked .material-icons-round {
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--accent-color); /* Ensure it stays colored */
+}
+
+/* --- 2. HOME CARD TACTILE PRESS (Optional) --- */
+/* This solves the "Tap to read" feeling. 
+   When the user holds their finger on the card, it shrinks slightly. */
+.hotd-compact-card:active {
+    transform: scale(0.96); 
+    background: rgba(255, 255, 255, 0.08); /* Subtle highlight */
+    transition: transform 0.1s ease, background 0.1s;
+}
+/* --- UN-BOOKMARK ANIMATION (Deflate) --- */
+@keyframes popOut {
+    0% { transform: scale(1.2); } /* Start slightly large (from the previous state) */
+    40% { transform: scale(0.7); } /* Shrink down */
+    100% { transform: scale(1); }  /* Snap back to normal */
+}
+
+/* We will add this class via JS for 300ms when removing */
+.bookmark-btn.unbookmarked .material-icons-round {
+    animation: popOut 0.3s ease-out;
+    color: var(--text-secondary); /* Ensure it goes back to gray smoothly */
+}
+/* --- SIMPLE INFO AREA (No Box) --- */
+.dev-card {
+    margin-top: 40px;
+    padding: 0; /* Removed padding since there is no border */
+    
+    /* Removed Background & Border to make it invisible */
+    background: transparent;
+    border: none;
+    
+    /* Center alignment */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    margin-bottom: 20px;
+}
+
+.app-info-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    
+    /* REMOVED: text-transform: uppercase; */
+}
+
+.dev-actions {
+    display: flex;
+    width: 100%;
+    gap: 12px;
+}
+
+.dev-btn {
+    flex: 1; /* Both buttons take equal width */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px; /* Pill shape like your doodle */
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* Hover/Active Effects */
+.dev-btn:active {
+    background: var(--accent-color);
+    color: var(--brand-primary); /* Dark text on click */
+    transform: scale(0.96);
+    border-color: var(--accent-color);
+}
+
+.dev-btn .material-icons-round {
+    font-size: 20px;
+}
+/* --- NAVIGATION SPACER --- */
+/* Forces content to scroll above the floating nav */
+.nav-spacer {
+    width: 100%;
+    /* Nav height + Safe area + 30px breathing room */
+    height: calc(var(--nav-height) + var(--safe-area-bottom) + 30px);
+    flex-shrink: 0; /* Prevents it from getting squished */
+    background: transparent; /* Totally invisible */
+}
+/* --- NEW HOME SCREEN LOGO --- */
+.home-logo-container {
+    display: flex;
+    flex-direction: column; /* Stack image on top of text */
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;       /* Breathing room from top */
+    margin-bottom: 20px;    /* Space before the greeting */
+    animation: fadeIn 0.8s ease forwards;
+}
+
+.home-logo-container .app-logo-img {
+    height: 52px;           /* Larger than the old header logo */
+    width: auto;
+    margin-bottom: 8px;     /* Gap between icon and text */
+    /* Optional: Adds a subtle shadow for depth */
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2)); 
+}
+
+/* Ensure the logo turns black in light mode */
+body.light-theme .home-logo-container .app-logo-img {
+    filter: invert(1);
+}
+
+.home-logo-container .app-logo {
+    font-size: 1.6rem;      /* Big and bold */
+    letter-spacing: 0.15em; /* Premium spacing */
+    font-family: 'Archivo Black', sans-serif;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    line-height: 1;
+}
+/* --- PAGE TITLE ALIGNMENT FIX --- */
+/* Pulls the "Search" and "Library" titles left to match the input box */
+#view-search h2, 
+#view-library h2 {
+    margin-left: -10px; 
+}
+/* --- LIBRARY SUBTEXT ALIGNMENT --- */
+#view-library .section-header {
+    margin-left: -10px;
+    padding-left: 0; /* Remove inner padding so it lines up perfectly */
+}
+/* --- SETTINGS PREVIEW CARD --- */
+.preview-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+    transition: background 0.3s;
+}
+
+/* Ensure the preview text behaves exactly like the real text */
+.preview-text.hadith-arabic {
+    margin-bottom: 10px;
+    line-height: 2;
+}
+
+.preview-text.hadith-english {
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+/* --- SETTINGS SECTION LABELS --- */
+.settings-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent-color); 
+    margin-bottom: 12px;
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+}
+/* --- FINAL SETTINGS WIDTH FIX --- */
+.settings-group {
+    /* 1. Remove conflicting constraints */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    /* 2. Style Basics */
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 30px;
+    background: transparent;
+    box-sizing: border-box;
+
+    /* 3. MANUAL WIDTH CONTROL (The Magic Part) */
+    width: 95vw;  /* Change this number (90vw, 92vw, 95vw) to resize */
+    
+    /* 4. Force Center Alignment */
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
 }

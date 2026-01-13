@@ -19,27 +19,20 @@
 <body>
     <div class="app-background"></div>
 
-    <header class="app-header glass">
-        <div class="header-outer-container">
-            <div class="header-content">
-                <button id="header-back-btn" class="icon-btn">
-                    <span class="material-icons-round" style="font-size: 1.5rem;">arrow_back</span>
-                </button>
-                <div id="header-logo" class="logo-wrapper">
-                    <img src="assets/logo.png" class="app-logo-img" alt="DeenBase Logo">
-                    <h1 class="app-logo">DEENBASE</h1>
-                </div>
+    <main id="main-container">
+        
+        <section id="view-home" class="view active-view">
+            <div class="home-logo-container">
+                <img src="assets/logo.png" class="app-logo-img" alt="DeenBase Logo">
+                <h1 class="app-logo">DEENBASE</h1>
             </div>
 
-    </header>
-
-    <main id="main-container">
-        <section id="view-home" class="view active-view">
             <div class="home-greeting">
                 <div class="greeting-arabic">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</div>
                 <div id="hero-date" class="greeting-sub">...</div>
             </div>
-            <div style="padding: 0 01px;">
+            
+            <div style="padding: 0 1px;">
                 <div class="hotd-label">Hadith of the Day</div>
                 <div id="hotd-container">
                     <div class="ios-spinner">
@@ -52,70 +45,103 @@
                     </div>
                 </div>
             </div>
-            <div class="spacer"></div>
+            <div class="nav-spacer"></div>
         </section>
 
-<section id="view-search" class="view">
-    <!-- Add Search Bar HERE inside the view -->
-<div class="search-container">
-    <div class="input-wrapper" style="position: relative; display: flex; align-items: center; gap: 8px; margin-bottom: 0;">
-        
-        <div style="position: relative; flex: 1; display: flex; align-items: center; height: 45px;">
-            <input type="number" id="search-input-view" placeholder="Enter Hadith Number..." class="glass-input" 
-                   style="width: 100%; height: 100%; padding-right: 45px; margin: 0;">
-            <button id="clear-search-view" class="hidden" 
-                    style="position: absolute; right: 12px; background: none; border: none; color: var(--text-secondary); opacity: 0.5; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; width: 24px; height: 24px;">
-                <span class="material-icons-round" style="font-size: 20px;">close</span>
-            </button>
-        </div>
+        <section id="view-search" class="view">
+            <h2 style="margin-bottom: 20px; font-size: 2rem;">Search</h2>
 
-        <button id="search-btn-view" class="action-btn" style="height: 70px; width: 50px; padding: 0; display: flex; align-items: center; justify-content: center;">
-            <span class="material-icons-round">search</span>
-        </button>
-    </div>
-</div>
+            <div class="search-container">
+                <div class="input-wrapper" style="position: relative; display: flex; align-items: center; gap: 8px; margin-bottom: 0;">
+                    
+                    <div style="position: relative; flex: 1; display: flex; align-items: center; height: 45px;">
+                        <input type="number" id="search-input-view" placeholder="Enter Hadith Number..." class="glass-input" 
+                               style="width: 100%; height: 100%; padding-right: 45px; margin: 0;">
+                        <button id="clear-search-view" class="hidden" 
+                                style="position: absolute; right: 12px; background: none; border: none; color: var(--text-secondary); opacity: 0.5; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; width: 24px; height: 24px;">
+                            <span class="material-icons-round" style="font-size: 20px;">close</span>
+                        </button>
+                    </div>
 
-    
-    <div id="loader" class="ios-spinner hidden">
-        <div class="spinner-blade"></div><div class="spinner-blade"></div>
-        <div class="spinner-blade"></div><div class="spinner-blade"></div>
-        <div class="spinner-blade"></div><div class="spinner-blade"></div>
-        <div class="spinner-blade"></div><div class="spinner-blade"></div>
-        <div class="spinner-blade"></div><div class="spinner-blade"></div>
-        <div class="spinner-blade"></div><div class="spinner-blade"></div>
-    </div>
-<div id="search-history-container" class="hidden">
-    <div class="section-header" style="padding: 0 4px; margin-bottom: 10px;">
-        <span class="subtext">Recent</span>
-        <button id="clear-recent-btn" class="text-btn small">Clear</button>
-    </div>
-    <div id="recent-searches-list" class="results-list"></div>
-</div>
-        <div id="recent-searches-list" class="results-list"></div>
-    </div>
-    <div id="search-results" class="results-list"></div>
-</section>
+                    <button id="search-btn-view" class="action-btn" style="height: 70px; width: 50px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                        <span class="material-icons-round">search</span>
+                    </button>
+                </div>
+            </div>
 
-<section id="view-library" class="view">
-    <!-- Removed segmented control - Library now shows only Bookmarks -->
-    <div class="section-header" style="margin-bottom: 16px;">
-        <span class="subtext">Saved Hadiths</span>
-    </div>
-    <div id="bookmarks-list" class="results-list"></div>
-    <div id="bookmarks-empty" class="placeholder-content hidden" style="height: 60vh;">
-        <span class="material-icons-round" style="opacity:0.5; font-size: 48px;">bookmark_border</span>
-        <p style="margin-top: 16px; font-size: 1.1rem;">No bookmarks yet.</p>
-        <p style="margin-top: 8px; font-size: 0.9rem; opacity: 0.7;">Tap the bookmark icon on any hadith to save it here.</p>
-    </div>
-</section>
+            <div id="loader" class="ios-spinner hidden">
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+                <div class="spinner-blade"></div><div class="spinner-blade"></div>
+            </div>
+
+            <div id="search-history-container" class="hidden">
+                <div class="settings-group" style="margin-top: 10px; margin-bottom: 20px; text-align: center; padding: 15px;">
+                    <button id="clear-recent-btn" 
+                            style="background: none; border: none; color: var(--text-secondary); font-size: 1rem; font-weight: 500; cursor: pointer; width: 100%;">
+                        Clear All History
+                    </button>
+                </div>
+                
+                <div id="recent-searches-list" class="results-list"></div>
+            </div>
+
+            <div id="search-results" class="results-list"></div>
+            <div class="nav-spacer"></div>
+        </section>
+
+        <section id="view-library" class="view">
+            <h2 style="margin-bottom: 20px; font-size: 2rem;">Bookmarks</h2>
+            
+            <div id="bookmarks-list" class="results-list"></div>
+            <div id="bookmarks-empty" class="placeholder-content hidden" style="height: 60vh;">
+                <span class="material-icons-round" style="opacity:0.5; font-size: 48px;">bookmark_border</span>
+                <p style="margin-top: 16px; font-size: 1.1rem;">No bookmarks yet.</p>
+                <p style="margin-top: 8px; font-size: 0.9rem; opacity: 0.7;">Tap the bookmark icon on any hadith to save it here.</p>
+            </div>
+            <div class="nav-spacer"></div>
+        </section>
 
         <section id="view-reader" class="view">
             <div id="reader-content" style="padding-top: 20px;"></div>
+            <div class="nav-spacer"></div>
         </section>
+
         <section id="view-settings" class="view">
-            <div class="settings-content">
-                <h2 style="margin-bottom: 24px; font-size: 1.8rem;">Settings</h2>
+            <h2 style="margin-bottom: 24px; font-size: 1.8rem;">Settings</h2>
+            
+            <div class="settings-group">
+                <div class="setting-item">
+                    <label>Arabic Text Style</label>
+                    <div class="segmented-control" style="margin-bottom:0;">
+                        <button class="segment active" data-font="Amiri">Classic</button>
+                        <button class="segment" data-font="Scheherazade New">Modern</button>
+                    </div>
+                </div>
                 
+                <div class="setting-item">
+                    <label>Arabic Text Size</label>
+                    <input type="range" id="fs-arabic" min="1" max="3" step="0.1" value="1.6">
+                </div>
+
+                <div class="setting-item">
+                    <label>Preview</label>
+                    <div class="preview-card">
+                        <div class="hadith-arabic preview-text">إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ</div>
+                        <div class="hadith-english preview-text">"The reward of deeds depends upon the intentions."</div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <label>Translation Text Size</label>
+                    <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1">
+                </div>
+            </div>
+
+            <div class="settings-group">
                 <button id="theme-toggle" class="theme-btn" style="margin-bottom: 24px;">
                     <span class="material-icons-round">dark_mode</span>
                     <span id="theme-label">Dark Mode</span>
@@ -130,27 +156,23 @@
                         </label>
                     </div>
                 </div>
-                
-                <div class="setting-item">
-                    <label>Arabic Font Style</label>
-                    <div class="segmented-control" style="margin-bottom:0;">
-                        <button class="segment active" data-font="Amiri">Classic</button>
-                        <button class="segment" data-font="Scheherazade New">Modern</button>
-                    </div>
-                </div>
-                
-                <div class="setting-item">
-                    <label>Arabic Font Size</label>
-                    <input type="range" id="fs-arabic" min="1" max="3" step="0.1" value="1.6">
-                </div>
-                
-                <div class="setting-item">
-                    <label>Translation Font Size</label>
-                    <input type="range" id="fs-english" min="0.8" max="1.5" step="0.05" value="1">
-                </div>
-                
-                <div class="setting-footer">DeenBase v3.1.1</div>
             </div>
+            
+            <div class="dev-card">
+                <div class="app-info-title">DeenBase v4.0</div>
+                <div class="dev-actions">
+                    <a href="https://github.com/aftab7xt/DeenBase" target="_blank" class="dev-btn">
+                        <span class="material-icons-round">code</span>
+                        <span>GitHub</span>
+                    </a>
+                    <a href="https://www.instagram.com/deen_base" target="_blank" class="dev-btn">
+                        <span class="material-icons-round">camera_alt</span>
+                        <span>Instagram</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="nav-spacer"></div>
         </section>
     </main>
 
@@ -160,22 +182,23 @@
     </div>
 
     <nav class="bottom-nav glass">
+        <div class="nav-indicator"></div>
+        
         <button class="nav-item active" data-target="view-home">
             <span class="material-icons-round">home</span>
-            <span class="nav-label">Home</span>
         </button>
+        
         <button class="nav-item" data-target="view-search">
             <span class="material-icons-round">search</span>
-            <span class="nav-label">Search</span>
         </button>
+        
         <button class="nav-item" data-target="view-library">
             <span class="material-icons-round">collections_bookmark</span>
-            <span class="nav-label">Library</span>
         </button>
-<button class="nav-item" data-target="view-settings">
-    <span class="material-icons-round">settings</span>
-    <span class="nav-label">Settings</span>
-</button>
+
+        <button class="nav-item" data-target="view-settings">
+            <span class="material-icons-round">settings</span>
+        </button>
     </nav>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

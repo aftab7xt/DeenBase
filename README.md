@@ -18,14 +18,6 @@ Just content.
 
 ---
 
-## 🛠 Tech Stack
-
-- **Type:** Website  
-- **Frontend:** HTML, CSS, JavaScript  
-- **Storage:** Browser storage (for bookmarks & preferences)
-
----
-
 ## 🎯 Philosophy
 
 - Content over design  

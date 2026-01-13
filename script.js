@@ -5,14 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view');
     
-    // Header Elements
-    const headerBackBtn = document.getElementById('header-back-btn');
-    const headerLogo = document.getElementById('header-logo');
-    
-// Search Elements
-const searchBtn = document.getElementById('search-btn-view');
-const searchInput = document.getElementById('search-input-view');
-const clearSearchBtn = document.getElementById('clear-search-view');
+    // Search Elements
+    const searchBtn = document.getElementById('search-btn-view');
+    const searchInput = document.getElementById('search-input-view');
+    const clearSearchBtn = document.getElementById('clear-search-view');
     const searchResults = document.getElementById('search-results');
     const searchHistoryContainer = document.getElementById('search-history-container');
     const recentSearchesList = document.getElementById('recent-searches-list');
@@ -26,9 +22,9 @@ const clearSearchBtn = document.getElementById('clear-search-view');
     const hotdContainer = document.getElementById('hotd-container');
     const dateBadge = document.getElementById('hero-date');
 
-// Library Elements (simplified - bookmarks only)
-const bookmarksList = document.getElementById('bookmarks-list');
-const bookmarksEmpty = document.getElementById('bookmarks-empty');
+    // Library Elements (simplified - bookmarks only)
+    const bookmarksList = document.getElementById('bookmarks-list');
+    const bookmarksEmpty = document.getElementById('bookmarks-empty');
 
     // Settings Elements
     const settingsOverlay = document.getElementById('settings-overlay');
@@ -173,11 +169,16 @@ function setupSettingsEvents() {
     const sliderArabic = document.getElementById('fs-arabic');
     const sliderEnglish = document.getElementById('fs-english');
     
+    // Initialize fills on load
+    updateSliderFill(sliderArabic);
+    updateSliderFill(sliderEnglish);
+    
     if (sliderArabic) {
         sliderArabic.addEventListener('input', (e) => {
             userSettings.fsArabic = e.target.value;
             applySettings();
             saveSettings();
+            updateSliderFill(e.target); // <--- Updates fill while dragging
         });
     }
     
@@ -186,6 +187,7 @@ function setupSettingsEvents() {
             userSettings.fsEnglish = e.target.value;
             applySettings();
             saveSettings();
+            updateSliderFill(e.target); // <--- Updates fill while dragging
         });
     }
 }
@@ -198,41 +200,45 @@ function setupSettingsEvents() {
         }
     });
 
-    // --- HANDLE HEADER BACK BUTTON ---
-    if (headerBackBtn) {
-        headerBackBtn.addEventListener('click', () => {
-            history.back(); // Triggers popstate
-        });
-    }
-
     // --- 2. NAVIGATION ---
     function setupNavigation() {
-        navItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                const clickedBtn = e.target.closest('.nav-item');
-                const targetId = clickedBtn.getAttribute('data-target');
-
-if (targetId) {
-    lastActiveViewId = targetId;
+    const navIndicator = document.querySelector('.nav-indicator');
     
-    // No need to show/hide header search anymore
-    // Search input is now inside the view itself
+    navItems.forEach((item, index) => {
+        item.addEventListener('click', (e) => {
+            const clickedBtn = e.target.closest('.nav-item');
+            const targetId = clickedBtn.getAttribute('data-target');
 
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    clickedBtn.classList.add('active');
-                    views.forEach(view => view.classList.remove('active-view'));
-                    document.getElementById(targetId)?.classList.add('active-view');
-                    
-                    if(targetId === 'view-search' && searchInput.value === '') {
-                        renderRecentSearches();
-                    }
-                   if(targetId === 'view-library') {
-    renderBookmarks(); // Only render bookmarks now
-}
+            if (targetId) {
+                lastActiveViewId = targetId;
+                
+                            // --- NEW ALIGNMENT LOGIC ---
+            // 1. Get the exact geometry of the clicked button
+            const leftPosition = clickedBtn.offsetLeft;
+            const itemWidth = clickedBtn.offsetWidth;
+
+            // 2. Apply directly to the indicator
+            if (navIndicator) {
+                navIndicator.style.left = `${leftPosition}px`;
+                navIndicator.style.width = `${itemWidth}px`;
+            }
+
+                
+                navItems.forEach(nav => nav.classList.remove('active'));
+                clickedBtn.classList.add('active');
+                views.forEach(view => view.classList.remove('active-view'));
+                document.getElementById(targetId)?.classList.add('active-view');
+                
+                if(targetId === 'view-search' && searchInput.value === '') {
+                    renderRecentSearches();
                 }
-            });
+                if(targetId === 'view-library') {
+                    renderBookmarks();
+                }
+            }
         });
-    }
+    });
+}
 
 // --- 3. LIBRARY ---
 function setupLibrary() {
@@ -636,18 +642,32 @@ if (appHeader) appHeader.classList.remove('reader-active');
         }
     });
 
-    // Bookmark (TOP button)
+    // Bookmark (TOP button) - UPDATED
     const bmBtn = card.querySelector('.bookmark-btn');
     const bmIcon = bmBtn.querySelector('.material-icons-round');
+    
     bmBtn.addEventListener('click', () => {
         const added = toggleBookmark(hadith);
+        
         if(added) {
+            // Case 1: Adding Bookmark
             bmIcon.textContent = 'bookmark'; 
             bmBtn.classList.add('bookmarked');
+            bmBtn.classList.remove('unbookmarked'); // Safety cleanup
             showToast("Saved to Bookmarks");
         } else {
+            // Case 2: Removing Bookmark
             bmIcon.textContent = 'bookmark_border'; 
             bmBtn.classList.remove('bookmarked');
+            
+            // --- NEW: Trigger the "Exit" Animation ---
+            bmBtn.classList.add('unbookmarked');
+            
+            // Remove the class after animation finishes (clean up)
+            setTimeout(() => {
+                bmBtn.classList.remove('unbookmarked');
+            }, 300);
+            
             showToast("Removed from Bookmarks");
         }
     });
@@ -753,14 +773,39 @@ if (appHeader) appHeader.classList.remove('reader-active');
     }
 
     // --- UTILS ---
+    let toastTimeout; // Variable to track the timer
+
     function showToast(message) {
         const toast = document.getElementById('toast-container');
         const msgSpan = document.getElementById('toast-message');
+        
         if(toast && msgSpan) {
-            msgSpan.textContent = message; toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 2000);
+            // 1. Reset state (in case it's currently closing)
+            toast.classList.remove('hidden', 'closing');
+            
+            // 2. Set Content
+            msgSpan.textContent = message; 
+            
+            // 3. Clear previous timer if exists (prevents early closing)
+            if (toastTimeout) clearTimeout(toastTimeout);
+            
+            // 4. Set new timer
+            toastTimeout = setTimeout(() => {
+                // Trigger exit animation
+                toast.classList.add('closing');
+                
+                // Wait for animation to finish (300ms) then actually hide
+                toast.addEventListener('animationend', () => {
+                    if(toast.classList.contains('closing')) {
+                        toast.classList.add('hidden');
+                        toast.classList.remove('closing');
+                    }
+                }, { once: true });
+                
+            }, 2000); // Visible for 2 seconds
         }
     }
+
     function showLoader() { loader.classList.remove('hidden'); }
     function hideLoader() { loader.classList.add('hidden'); }
 
@@ -789,3 +834,32 @@ if (appHeader) appHeader.classList.remove('reader-active');
 
     console.log("DeenBase: v1.0 Loaded");
 });
+    // Add this Helper Function inside setupNavigation or globally
+    function updateIndicatorPosition() {
+        const activeBtn = document.querySelector('.nav-item.active');
+        const navIndicator = document.querySelector('.nav-indicator');
+        
+        if (activeBtn && navIndicator) {
+            navIndicator.style.left = `${activeBtn.offsetLeft}px`;
+            navIndicator.style.width = `${activeBtn.offsetWidth}px`;
+        }
+    }
+
+    // Call it immediately on load
+    setTimeout(updateIndicatorPosition, 100); // Small delay to ensure layout is ready
+
+    // Update on resize (in case user rotates phone)
+    window.addEventListener('resize', updateIndicatorPosition);
+    // Helper: Fills the slider track with accent color based on value
+    function updateSliderFill(slider) {
+        if (!slider) return;
+        
+        // Calculate percentage: (value - min) / (max - min) * 100
+        const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+        
+        // Dynamic CSS Gradient: 
+        // Left side = Accent Color (var(--accent-color))
+        // Right side = Faded Track (rgba 255,255,255, 0.1)
+        // We use CSS variables so it works in Dark AND Light mode automatically
+        slider.style.background = `linear-gradient(to right, var(--accent-color) ${val}%, rgba(128, 128, 128, 0.2) ${val}%)`;
+    }

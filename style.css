@@ -1441,3 +1441,54 @@ html, body {
     align-items: center;
     justify-content: center;
 }
+/* --- BACK TO TOP BUTTON (v5.2) --- */
+#back-to-top {
+    position: fixed;
+    right: 20px;
+    top: 55%; /* Middle-right for easy thumb access */
+    width: 48px;
+    height: 48px;
+    
+    /* Using your glass variables from the nav block */
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    
+    border-radius: 50px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99; 
+    
+    color: var(--text-primary);
+    cursor: pointer;
+    
+    /* Using your cubic-bezier for consistency */
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.3s ease, 
+                visibility 0.3s;
+    
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Slides right and shrinks when hidden */
+#back-to-top.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(30px) scale(0.8);
+    pointer-events: none;
+}
+
+/* Tap feedback */
+#back-to-top:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Light theme support */
+body.light-theme #back-to-top {
+    background: rgba(255, 255, 255, 0.3);
+    color: #000000;
+}

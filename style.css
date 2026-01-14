@@ -84,14 +84,13 @@ h1, h2, h3 { font-weight: 600; }
 #main-container {
     flex: 1;
     overflow-y: auto;
-    
-    /* FORCE content to start higher up */
-    padding-top: 10px !important; 
-    padding-bottom: 0;
-    
     scroll-behavior: smooth;
+    
+    /* Standardized Padding */
+    padding-top: 10px !important; 
     padding-left: 16px;
     padding-right: 16px;
+    padding-bottom: 20px; /* Gives just a tiny bit of breathing room at the very end */
 }
 
 /* 2. Reset View Padding */
@@ -113,21 +112,6 @@ h1, h2, h3 { font-weight: 600; }
 h2 {
     margin-top: 0;
     line-height: 1.2;
-}
-
-/* STEP 8: Settings Overlay */
-.settings-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5); z-index: 200;
-    display: flex; flex-direction: column; justify-content: flex-end;
-    animation: fadeOverlay 0.2s ease;
-}
-.settings-card {
-    background: var(--bg-color); 
-    border-radius: 20px 20px 0 0;
-    padding: 24px; padding-bottom: calc(24px + var(--safe-area-bottom));
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .setting-item { margin-bottom: 24px; }
@@ -322,12 +306,12 @@ body.light-theme .segment.active { background: white; box-shadow: 0 1px 3px rgba
 /* Nav */
 .bottom-nav { 
     position: fixed; 
-    bottom: calc(var(--safe-area-bottom) + 16px); /* Float above bottom */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Center horizontally */
+    bottom: calc(var(--safe-area-bottom) + 16px); 
+    left: 50%; 
+    transform: translateX(-50%); 
     
-    width: calc(100% - 32px); /* Inset from edges */
-    max-width: 500px; /* Optional: limit width on tablets */
+    width: calc(100% - 32px); 
+    max-width: 500px; 
     height: var(--nav-height);
     
     display: flex; 
@@ -335,33 +319,43 @@ body.light-theme .segment.active { background: white; box-shadow: 0 1px 3px rgba
     align-items: center; 
     z-index: 100;
     
-    /* Pill shape */
-    border-radius: 50px; /* Full pill */
+    border-radius: 50px; 
     padding: 6px;
     
-    /* Glass background */
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--glass-border);
+
+    /* ADD THIS: Smooth animation for sliding in and out */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
 }
+
+/* ADD THIS: The class that JavaScript will toggle */
+.nav-hidden {
+    /* We must keep translateX(-50%) so it stays centered while sliding down */
+    transform: translate(-50%, 150%) !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
 body.light-theme .bottom-nav { background: rgba(255,255,255,0.3); }
-/* --- NAVIGATION ITEM STYLES (Icons Only) --- */
+
+/* --- NAVIGATION ITEM STYLES --- */
 .nav-item { 
     background: none; 
     border: none; 
     color: var(--text-secondary); 
     display: flex; 
-    align-items: center;     /* Vertically centers the icon */
-    justify-content: center; /* Horizontally centers the icon */
+    align-items: center;     
+    justify-content: center; 
     cursor: pointer; 
-    flex: 1;                 /* Equal width for all items */
+    flex: 1;                 
     height: 100%;
-    border-radius: 50px;     /* Pill shape */
-    padding: 0;              /* Removed padding so icon centers perfectly */
+    border-radius: 50px;     
+    padding: 0;              
     transition: all 0.3s ease;
     
-    /* Mobile Touch Fixes */
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -467,28 +461,43 @@ body.light-theme .nav-item.active {
     font-size: 20px; /* Slightly smaller than bookmark to fit well */
 }
 
-/* Toast Notification - Glassmorphism Update */
+/* --- v4.1 WIDER TOAST NOTIFICATION --- */
 .toast-container {
     position: fixed;
-    bottom: 100px; /* Above nav bar */
+    bottom: 110px; /* Slightly higher to stay clear of the smart-hide nav area */
     left: 50%;
     transform: translateX(-50%);
     
-    /* GLASS EFFECT START */
-    background: var(--glass-bg); /* Use the shared glass variable */
+    /* GLASS EFFECT */
+    background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--glass-border);
-    /* GLASS EFFECT END */
     
-    padding: 12px 24px;      /* Slightly wider for elegance */
+    /* UPDATED: Sizing for longer messages like "Recent searches cleared" */
+    min-width: 200px;        /* Prevents it from being too tiny */
+    max-width: 85vw;        /* Allows it to be much wider on the screen */
+    width: fit-content;     /* Adjusts perfectly to the text length */
+    
+    padding: 14px 28px;      /* More internal breathing room */
     border-radius: 50px;
     display: flex;
     align-items: center;
-    gap: 10px;               /* More breathing room between icon and text */
+    justify-content: center; /* Centers content if it wraps */
+    gap: 12px;
+    
     z-index: 300;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3); /* Softer, deeper shadow */
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     animation: toastPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;    /* Keeps "Recent searches cleared" on one line */
+}
+
+/* Ensure the text inside doesn't feel crowded */
+.toast-container span {
+    font-size: 0.95rem;      /* Slightly larger for readability */
+    font-weight: 500;
+    color: white;
+    text-align: center;
 }
 /* Toast Exit Animation */
 @keyframes toastExit {
@@ -855,7 +864,7 @@ input:checked + .slider:before {
     color: var(--text-primary);
 }
 /* ===========================
-   STEP 39: Tab Fade Animations
+   STEP 39: Tab Fade Animations (Updated for Settings)
    =========================== */
 
 /* 1. Define the Fade In Keyframes */
@@ -870,13 +879,14 @@ input:checked + .slider:before {
     }
 }
 
-/* 2. Apply ONLY to Main Tabs (Home, Search, Library) */
-/* We deliberately exclude #view-reader so we can slide it later */
+/* 2. Apply to Home, Search, Library, AND Settings */
 #view-home.active-view,
 #view-search.active-view,
-#view-library.active-view {
+#view-library.active-view,
+#view-settings.active-view {
     animation: tabFadeIn 0.25s ease-out forwards;
 }
+
 /* ===========================
    STEP 40: Reader Slide Animations
    =========================== */
@@ -981,37 +991,45 @@ input:checked + .slider:before {
     margin-top: 0 !important;
 }
 /* ===========================
-   Reader Action Bar (Bottom)
+   Reader Action Bar (v4.1 Cohesive Fix)
    =========================== */
-
 .reader-action-bar {
-    position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 60px); /* Added 8px spacing from nav */
-    left: -15px;  /* Inset from edges */
-    right: -15px; /* Inset from edges */
-    height: 60px;
+    /* 1. Layout: Sit naturally below the text */
+    position: relative;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 0 12px;
-    z-index: 90;
     
-    /* Rounded container like hadith card */
+    /* 2. Spacing: Matching your cards/settings groups */
+    margin-top: 24px;   
+    margin-bottom: 30px; 
+    height: 70px;
+    box-sizing: border-box;
+    z-index: 10;
+    
+    /* 3. Width & Centering: Matches your .settings-group logic */
+    width: 95vw; 
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* 4. Visuals: Exactly like your Hadith/Settings cards */
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 16px; /* Match hadith card */
+    border-radius: 16px;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     
-    /* Only show in reader view */
-    display: none;
+    /* Ensure it is visible when created */
+    display: flex !important;
 }
+
 
 /* Show action bar when reader is active */
 #view-reader.active-view .reader-action-bar {
     display: flex;
 }
 
+/* --- READER ACTION BUTTONS (v4.1 Icon Match) --- */
 .action-bar-btn {
     background: transparent;
     border: none;
@@ -1019,25 +1037,32 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 2px; /* Tighter gap for a cleaner look */
     cursor: pointer;
-    padding: 8px 16px;
+    flex: 1; /* Ensures equal spacing like the nav bar */
+    height: 100%;
     border-radius: 12px;
-    transition: all 0.2s;
-}
-
-.action-bar-btn:active {
-    background: var(--card-bg);
-    transform: scale(0.95);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .action-bar-btn .material-icons-round {
-    font-size: 22px;
+    font-size: 28px; /* Matches your Bottom Nav icon size */
+    transition: transform 0.2s ease;
+}
+
+.action-bar-btn:active .material-icons-round {
+    transform: scale(0.9); /* Subtle tactile feedback */
+    color: var(--text-primary);
 }
 
 .action-label {
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.7rem; /* Slightly smaller to keep focus on the icons */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.8;
 }
 
 /* Active state for language toggle */
@@ -1170,15 +1195,6 @@ body:not(.light-theme) .app-logo-img {
 .dev-btn .material-icons-round {
     font-size: 20px;
 }
-/* --- NAVIGATION SPACER --- */
-/* Forces content to scroll above the floating nav */
-.nav-spacer {
-    width: 100%;
-    /* Nav height + Safe area + 30px breathing room */
-    height: calc(var(--nav-height) + var(--safe-area-bottom) + 30px);
-    flex-shrink: 0; /* Prevents it from getting squished */
-    background: transparent; /* Totally invisible */
-}
 /* --- NEW HOME SCREEN LOGO --- */
 .home-logo-container {
     display: flex;
@@ -1273,4 +1289,21 @@ body.light-theme .home-logo-container .app-logo-img {
     position: relative;
     left: 50%;
     transform: translateX(-50%);
+}
+/* --- HIDE GLOBAL SCROLLBAR --- */
+/* This removes the scrollbar line while keeping scrolling functional */
+::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+}
+
+html, body {
+    -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+    scrollbar-width: none;  /* For Firefox */
+}
+/* Settings Page Header Fix */
+#view-settings h2 {
+    font-size: 2.1rem !important; /* Matched to Search/Library size */
+    font-weight: 700 !important;
+    margin-bottom: 24px;
+    margin-left: -10px; /* Aligns with your settings groups */
 }

@@ -1,16 +1,17 @@
 {
   "name": "DeenBase",
   "short_name": "DeenBase",
+  "description": "A minimal, offline-first Hadith companion.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0F222D",
+  "background_color": "#000000",
   "theme_color": "#0F222D",
-  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "assets/icon-512.png",
@@ -18,3 +19,4 @@
       "type": "image/png"
     }
   ]
+}

@@ -34,6 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const sliderArabic = document.getElementById('fs-arabic');
     const sliderEnglish = document.getElementById('fs-english');
 
+function saveSearchQuery(query) {
+    if (!query || query.length < 2) return;
+    let queries = getStoredData(KEY_QUERIES);
+    
+    // Filter out duplicates (case-insensitive)
+    queries = queries.filter(q => q.toLowerCase() !== query.toLowerCase());
+    
+    // Add to start and limit to 10
+    queries.unshift(query);
+    if (queries.length > 10) queries.pop(); 
+    
+    localStorage.setItem(KEY_QUERIES, JSON.stringify(queries));
+}
+
     // --- Config & Storage Keys ---
     const RAW_API_KEY = '$2y$10$83tRfHskMMReLlAtJiFNeQ5SO7xAxYwgGHIDxhLI4HPW8nRJP15';
     const API_KEY = encodeURIComponent(RAW_API_KEY);
@@ -43,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const KEY_HOTD = 'deenbase_hotd_data';
     const KEY_DATE = 'deenbase_hotd_date';
     const KEY_HISTORY = 'deenbase_history';
+    const KEY_QUERIES = 'deenbase_search_queries';
     const KEY_BOOKMARKS = 'deenbase_bookmarks';
     const KEY_SETTINGS = 'deenbase_settings';
     
@@ -220,35 +235,48 @@ function setupSettingsEvents() {
     // --- HANDLE NATIVE BACK GESTURE ---
     window.addEventListener('popstate', (event) => {
         const readerView = document.getElementById('view-reader');
+        
+        // 1. If Reader is open, close it and stop
         if (readerView && readerView.classList.contains('active-view')) {
             hideReader();
+            return; 
+        }
+
+        // 2. If gestured back, check which view to show
+        if (event.state && event.state.view) {
+            navigateToTab(event.state.view);
+        } else {
+            // 3. No state means we are back at the entry point (Home)
+            navigateToTab('view-home');
         }
     });
 
     // --- 2. NAVIGATION ---
-    function setupNavigation() {
+function setupNavigation() {
     const navIndicator = document.querySelector('.nav-indicator');
     
-    navItems.forEach((item, index) => {
+    navItems.forEach((item) => {
         item.addEventListener('click', (e) => {
             const clickedBtn = e.target.closest('.nav-item');
             const targetId = clickedBtn.getAttribute('data-target');
 
             if (targetId) {
+                // ADDED: Push the new state to the browser history
+                if (targetId !== lastActiveViewId) {
+                    history.pushState({ view: targetId }, "", `#${targetId.replace('view-', '')}`);
+                }
+
                 lastActiveViewId = targetId;
                 
-                            // --- NEW ALIGNMENT LOGIC ---
-            // 1. Get the exact geometry of the clicked button
-            const leftPosition = clickedBtn.offsetLeft;
-            const itemWidth = clickedBtn.offsetWidth;
+                // --- YOUR ALIGNMENT LOGIC (Kept) ---
+                const leftPosition = clickedBtn.offsetLeft;
+                const itemWidth = clickedBtn.offsetWidth;
 
-            // 2. Apply directly to the indicator
-            if (navIndicator) {
-                navIndicator.style.left = `${leftPosition}px`;
-                navIndicator.style.width = `${itemWidth}px`;
-            }
+                if (navIndicator) {
+                    navIndicator.style.left = `${leftPosition}px`;
+                    navIndicator.style.width = `${itemWidth}px`;
+                }
 
-                
                 navItems.forEach(nav => nav.classList.remove('active'));
                 clickedBtn.classList.add('active');
                 views.forEach(view => view.classList.remove('active-view'));
@@ -263,6 +291,35 @@ function setupSettingsEvents() {
             }
         });
     });
+}
+// Helper function to handle the UI switch for the back gesture
+function navigateToTab(targetId) {
+    const navIndicator = document.querySelector('.nav-indicator');
+    const clickedBtn = document.querySelector(`[data-target="${targetId}"]`);
+    
+    if (!clickedBtn) return;
+
+    lastActiveViewId = targetId;
+
+    // --- REUSE YOUR ALIGNMENT LOGIC ---
+    const leftPosition = clickedBtn.offsetLeft;
+    const itemWidth = clickedBtn.offsetWidth;
+    if (navIndicator) {
+        navIndicator.style.left = `${leftPosition}px`;
+        navIndicator.style.width = `${itemWidth}px`;
+    }
+
+    // Update active visual states
+    navItems.forEach(nav => nav.classList.remove('active'));
+    clickedBtn.classList.add('active');
+    views.forEach(view => view.classList.remove('active-view'));
+    
+    const targetView = document.getElementById(targetId);
+    if (targetView) targetView.classList.add('active-view');
+
+    // Refresh dynamic content if needed
+    if(targetId === 'view-search' && searchInput.value === '') renderRecentSearches();
+    if(targetId === 'view-library') renderBookmarks();
 }
 
 // --- 3. LIBRARY ---
@@ -308,37 +365,38 @@ function setupLibrary() {
             attachListListeners('bookmark', bookmarks);
         }
     }
-    function renderRecentSearches() {
-        const history = getStoredData(KEY_HISTORY).slice(0, 10); 
-        
-        if (history.length === 0) {
-            searchHistoryContainer.classList.add('hidden');
-            return;
-        }
-
-        searchHistoryContainer.classList.remove('hidden');
-        let html = '';
-        history.forEach((hadith, index) => {
-            const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
-            const preview = cleanText.substring(0, 60) + '...';
-            html += `
-                <div class="result-item recent-item" data-index="${index}">
-                    <div class="result-ref">Bukhari ${hadith.hadithNumber}</div>
-                    <div class="result-preview">${preview}</div>
-                    <span class="material-icons-round cache-badge" style="opacity:0.4;">history</span>
-                </div>
-            `;
-        });
-        recentSearchesList.innerHTML = html;
-        const items = recentSearchesList.querySelectorAll('.recent-item');
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                const index = item.getAttribute('data-index');
-                openReader(history[index]);
-                addToHistory(history[index]);
-            });
-        });
+   function renderRecentSearches() {
+    const queries = getStoredData(KEY_QUERIES);
+    
+    if (queries.length === 0) {
+        if (searchHistoryContainer) searchHistoryContainer.classList.add('hidden');
+        return;
     }
+
+    if (searchHistoryContainer) searchHistoryContainer.classList.remove('hidden');
+    
+    let html = '';
+    queries.forEach((query) => {
+        html += `
+            <div class="result-item recent-query-item" data-query="${query}">
+                <div class="result-ref">${query}</div>
+                <span class="material-icons-round cache-badge" style="opacity:0.4;">history</span>
+            </div>`;
+    });
+    
+    recentSearchesList.innerHTML = html;
+    
+    // Re-attach listeners so clicking a keyword triggers a search
+    const items = recentSearchesList.querySelectorAll('.recent-query-item');
+    items.forEach(item => {
+        item.addEventListener('click', () => {
+            const val = item.getAttribute('data-query');
+            searchInput.value = val;
+            if (clearSearchBtn) clearSearchBtn.classList.remove('hidden');
+            performSearch();
+        });
+    });
+}
 
 function generateListHTML(list, type) {
     let html = '';
@@ -461,32 +519,58 @@ function generateListHTML(list, type) {
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
     }
 
-    async function performSearch() {
-        const query = searchInput.value.trim();
-        if (!query) {
-            renderRecentSearches();
-            return;
-        }
-        
-        if(searchHistoryContainer) searchHistoryContainer.classList.add('hidden');
-        showLoader(); hideReader(); searchResults.innerHTML = '';
-
-        try {
-            const url = `${BASE_URL}?apiKey=${API_KEY}&book=sahih-bukhari&hadithNumber=${query}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('Network');
-            const data = await res.json();
-            const list = data?.hadiths?.data;
-            if (list && list.length > 0) renderSearchResults(list);
-            else searchResults.innerHTML = '<p class="placeholder-message">No hadith found.</p>';
-        } catch (error) {
-            const history = getStoredData(KEY_HISTORY);
-            const bookmarks = getStoredData(KEY_BOOKMARKS);
-            const found = history.find(h => h.hadithNumber == query) || bookmarks.find(b => b.hadithNumber == query);
-            if (found) renderSearchResults([found]);
-            else searchResults.innerHTML = '<p class="placeholder-message" style="color:#ef4444;">Offline & not found.</p>';
-        } finally { hideLoader(); }
+  async function performSearch() {
+    const query = searchInput.value.trim();
+    if (!query) {
+        renderRecentSearches();
+        return;
     }
+    
+    // Save the actual search string to your keyword history
+    saveSearchQuery(query); 
+
+    if(searchHistoryContainer) searchHistoryContainer.classList.add('hidden');
+    showLoader(); 
+    if (typeof hideReader === 'function') hideReader(); 
+    searchResults.innerHTML = '';
+
+    try {
+        let url;
+        const isNumber = /^\d+$/.test(query); 
+
+        if (isNumber) {
+            url = `${BASE_URL}?apiKey=${API_KEY}&book=sahih-bukhari&hadithNumber=${query}`;
+        } else {
+            url = `${BASE_URL}?apiKey=${API_KEY}&book=sahih-bukhari&hadithEnglish=${encodeURIComponent(query)}`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Network');
+        const data = await res.json();
+        
+        const list = data?.hadiths?.data;
+        if (list && list.length > 0) {
+            renderSearchResults(list);
+        } else {
+            searchResults.innerHTML = `
+                <div class="placeholder-content">
+                    <span class="material-icons-round" style="opacity:0.5; font-size: 48px;">search_off</span>
+                    <p style="margin-top: 16px;">No results for "${query}"</p>
+                </div>`;
+        }
+    } catch (error) {
+        console.error("Search Error:", error);
+        // Fallback to local data if available
+        const bookmarks = getStoredData(KEY_BOOKMARKS);
+        const found = bookmarks.find(b => b.hadithNumber == query);
+        
+        if (found) renderSearchResults([found]);
+        else searchResults.innerHTML = '<p class="placeholder-message" style="color:#ef4444;">No results found or you are offline.</p>';
+    } finally { 
+        hideLoader(); 
+    }
+}
+
 
     function renderSearchResults(hadiths) {
         searchResults.innerHTML = generateListHTML(hadiths, 'result');

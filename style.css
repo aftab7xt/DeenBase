@@ -1307,3 +1307,12 @@ html, body {
     margin-bottom: 24px;
     margin-left: -10px; /* Aligns with your settings groups */
 }
+/* --- v4.1 INVISIBLE GHOST SPACER --- */
+.nav-spacer {
+    /* Height matches Nav (60px) + Safe Area + extra 40px "breathing room" */
+    height: calc(var(--nav-height) + var(--safe-area-bottom) + 40px);
+    width: 100%;
+    background: transparent;
+    pointer-events: none;
+    user-select: none;
+}

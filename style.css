@@ -44,7 +44,42 @@ body.light-theme {
 }
 
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove tap highlights and callouts ONLY on interactive elements */
+button, 
+a, 
+.nav-item,
+.action-btn,
+.result-item,
+.hotd-compact-card,
+.dev-btn,
+.icon-btn,
+.text-btn,
+.theme-btn,
+.segment,
+.bookmark-btn,
+.copy-btn,
+.share-btn,
+.action-bar-btn,
+.lang-toggle,
+.logo-wrapper {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    outline: none !important;
+}
+
+button:focus,
+a:focus {
+    outline: none !important;
+}
 
 body {
     font-family: 'Archivo', sans-serif;

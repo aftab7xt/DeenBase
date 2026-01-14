@@ -1036,3 +1036,26 @@ async function shareAsImage(elementId) {
         // We use CSS variables so it works in Dark AND Light mode automatically
         slider.style.background = `linear-gradient(to right, var(--accent-color) ${val}%, rgba(128, 128, 128, 0.2) ${val}%)`;
     }
+// --- BACK TO TOP LOGIC (v5.2) ---
+const backToTopBtn = document.getElementById('back-to-top');
+const mainAppContainer = document.getElementById('main-container');
+
+if (backToTopBtn && mainAppContainer) {
+    // 1. Detect scrolling on the main container
+    mainAppContainer.addEventListener('scroll', () => {
+        // Show button after scrolling down 300px
+        if (mainAppContainer.scrollTop > 300) {
+            backToTopBtn.classList.remove('hidden');
+        } else {
+            backToTopBtn.classList.add('hidden');
+        }
+    }, { passive: true });
+
+    // 2. Smoothly scroll to top when clicked
+    backToTopBtn.addEventListener('click', () => {
+        mainAppContainer.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}

@@ -46,6 +46,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const KEY_BOOKMARKS = 'deenbase_bookmarks';
     const KEY_SETTINGS = 'deenbase_settings';
     
+    // --- SMART-HIDE NAVIGATION LOGIC ---
+let lastScrollTop = 0;
+const navBar = document.querySelector('.bottom-nav');
+const scrollContainer = document.getElementById('main-container');
+
+// Only proceed if the elements exist
+if (navBar && scrollContainer) {
+    scrollContainer.addEventListener('scroll', () => {
+        let scrollTop = scrollContainer.scrollTop;
+
+        // Check if user scrolled more than 50px (buffer to prevent flickering)
+        if (Math.abs(lastScrollTop - scrollTop) <= 5) return;
+
+        if (scrollTop > lastScrollTop && scrollTop > 50) {
+            // Scrolling Down - Hide Nav
+            navBar.classList.add('nav-hidden');
+        } else {
+            // Scrolling Up - Show Nav
+            navBar.classList.remove('nav-hidden');
+        }
+        
+        lastScrollTop = scrollTop;
+    }, { passive: true });
+}
+
     // --- REGISTER SERVICE WORKER ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
@@ -686,85 +711,100 @@ if (appHeader) appHeader.classList.remove('reader-active');
     shareBtn.addEventListener('click', () => shareAsImage(cardId));
 }
 
-    // --- 10. SHARE IMAGE ---
-    async function shareAsImage(elementId) {
-        if (typeof html2canvas === 'undefined') {
-            alert("Error: html2canvas library missing. Check internet/script tag.");
-            return;
-        }
-
-        const element = document.getElementById(elementId);
-        if (!element) return;
-
-        showToast("Generating image...");
-
-        try {
-            const clone = element.cloneNode(true);
-            
-            clone.style.position = 'fixed';
-            clone.style.top = '-9999px';
-            clone.style.left = '0';
-            clone.style.width = '600px'; 
-            clone.style.maxWidth = '600px';
-            
-            clone.style.backgroundColor = '#0F222D'; 
-            clone.style.color = '#F0F7F4';
-            
-            clone.style.border = '2px solid #CCA352';
-            clone.style.borderRadius = '20px';
-            
-            clone.style.padding = '40px';
-            
-            const controls = clone.querySelector('.card-controls');
-            if(controls) controls.remove();
-
-            const footer = document.createElement('div');
-            footer.innerHTML = `
-                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:30px; padding-top:20px; border-top:1px solid rgba(204, 163, 82, 0.3);">
-                    <span style="font-family:serif; color:#CCA352; font-weight:300; letter-spacing:0.05em; font-size:1.2rem;">aftab7xt.github.io/DeenBase/</span>
-                </div>
-            `;
-            clone.appendChild(footer);
-
-            document.body.appendChild(clone);
-
-            const canvas = await html2canvas(clone, {
-                scale: 2, 
-                backgroundColor: null, 
-                useCORS: true,
-                logging: false 
-            });
-
-            document.body.removeChild(clone);
-
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    showToast("Image generation failed");
-                    return;
-                }
-
-                const file = new File([blob], "deenbase-hadith.png", { type: "image/png" });
-
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'DeenBase Hadith',
-                            text: 'Read this hadith on DeenBase.'
-                        });
-                    } catch (err) {
-                        console.log('Share cancelled');
-                    }
-                } else {
-                    downloadImage(canvas);
-                }
-            });
-
-        } catch (error) {
-            console.error(error);
-            showToast("Error generating image");
-        }
+// --- 10. SHARE IMAGE (v4.1 Moctale Style Footer) ---
+async function shareAsImage(elementId) {
+    if (typeof html2canvas === 'undefined') {
+        alert("Error: html2canvas library missing. Check internet/script tag.");
+        return;
     }
+
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    showToast("Generating image...");
+
+    try {
+        const clone = element.cloneNode(true);
+        
+        // 1. Base Image Styling
+        clone.style.position = 'fixed';
+        clone.style.top = '-9999px';
+        clone.style.left = '0';
+        clone.style.width = '600px'; 
+        clone.style.maxWidth = '600px';
+        clone.style.backgroundColor = '#1C1C1E'; 
+        clone.style.color = '#FFFFFF';           
+        clone.style.border = 'none';
+        clone.style.borderRadius = '0'; 
+        clone.style.padding = '50px 50px 40px 50px'; 
+        
+        const controls = clone.querySelector('.card-controls');
+        if(controls) controls.remove();
+
+        // 2. Custom Footer Layout (Based on Doodles)
+        const footer = document.createElement('div');
+        footer.style.marginTop = '40px';
+        footer.style.display = 'flex';
+        footer.style.alignItems = 'center';
+        footer.style.justifyContent = 'space-between'; // Pushes line left and branding right
+        footer.style.width = '100%';
+
+        footer.innerHTML = `
+            <div style="flex-grow: 1; height: 1px; background: rgba(255, 255, 255, 0.2); margin-right: 20px;"></div>
+            
+            <div style="display:flex; align-items:center; gap:15px;">
+                <img src="assets/logo.png" style="height: 90px; width: auto; object-fit: contain;">
+                
+                <div style="font-family:'Archivo Black', sans-serif; color:#FFFFFF; font-weight:400; letter-spacing:0.15em; font-size:1.6rem; text-transform:uppercase;">
+                    DEENBASE
+                </div>
+            </div>
+        `;
+        clone.appendChild(footer);
+
+        document.body.appendChild(clone);
+
+        // 3. Render
+        const canvas = await html2canvas(clone, {
+            scale: 2, 
+            backgroundColor: '#1C1C1E', 
+            useCORS: true,
+            logging: false 
+        });
+
+        document.body.removeChild(clone);
+
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                showToast("Image generation failed");
+                return;
+            }
+
+            const file = new File([blob], "deenbase-hadith.png", { type: "image/png" });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'DeenBase Hadith',
+                        text: 'Read this hadith on DeenBase.'
+                    });
+                } catch (err) {
+                    console.log('Share cancelled');
+                }
+            } else {
+                const link = document.createElement('a');
+                link.download = 'deenbase-hadith.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        showToast("Error generating image");
+    }
+}
 
     function downloadImage(canvas) {
         const link = document.createElement('a');

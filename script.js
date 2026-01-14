@@ -85,12 +85,61 @@ if (navBar && scrollContainer) {
         lastScrollTop = scrollTop;
     }, { passive: true });
 }
+    // --- REGISTER SERVICE WORKER & PWA INSTALL ---
+    let deferredPrompt;
+    let autoHideTimer; // Timer variable to handle auto-exit
+    const installBanner = document.getElementById('pwa-install-banner');
+    const installBtn = document.getElementById('pwa-install-btn');
+    const closeBanner = document.getElementById('pwa-close');
 
-    // --- REGISTER SERVICE WORKER ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
             .then(() => console.log('Service Worker Registered'))
             .catch((err) => console.log('Service Worker Failed', err));
+    }
+
+    // Capture the browser's install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // 1. Enter after 1 second delay
+        setTimeout(() => {
+            if (installBanner && deferredPrompt) {
+                installBanner.classList.remove('hidden');
+
+                // 2. Automatically hide after 7 seconds
+                autoHideTimer = setTimeout(() => {
+                    if (installBanner) installBanner.classList.add('hidden');
+                }, 7000);
+            }
+        }, 1000);
+    });
+
+    // Handle the Install button click
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Stop the 7s auto-hide timer so it doesn't close mid-install
+                clearTimeout(autoHideTimer);
+
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User ${outcome} the install prompt`);
+                deferredPrompt = null;
+                
+                if (installBanner) installBanner.classList.add('hidden');
+            }
+        });
+    }
+
+    // Handle the Close button click
+    if (closeBanner) {
+        closeBanner.addEventListener('click', () => {
+            // Stop the auto-hide timer and close immediately
+            clearTimeout(autoHideTimer);
+            if (installBanner) installBanner.classList.add('hidden');
+        });
     }
 
     // --- STATE ---

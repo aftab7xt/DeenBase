@@ -304,7 +304,7 @@ function setupSettingsEvents() {
         }
     });
 
-    // --- 2. NAVIGATION ---
+/* --- 2. NAVIGATION (v5.2 Hub & Spoke Fix) --- */
 function setupNavigation() {
     const navIndicator = document.querySelector('.nav-indicator');
     
@@ -314,14 +314,24 @@ function setupNavigation() {
             const targetId = clickedBtn.getAttribute('data-target');
 
             if (targetId) {
-                // ADDED: Push the new state to the browser history
+                // --- HISTORY LOGIC FIX ---
                 if (targetId !== lastActiveViewId) {
-                    history.pushState({ view: targetId }, "", `#${targetId.replace('view-', '')}`);
+                    const isHome = targetId === 'view-home';
+                    const wasHome = lastActiveViewId === 'view-home';
+
+                    // 1. Leaving Home -> Push (Add to stack)
+                    if (wasHome && !isHome) {
+                        history.pushState({ view: targetId }, "", `#${targetId.replace('view-', '')}`);
+                    } 
+                    // 2. Tab-to-Tab OR Tab-to-Home -> Replace (Don't grow stack)
+                    else {
+                        history.replaceState({ view: targetId }, "", `#${targetId.replace('view-', '')}`);
+                    }
                 }
 
                 lastActiveViewId = targetId;
                 
-                // --- YOUR ALIGNMENT LOGIC (Kept) ---
+                // --- VISUAL ALIGNMENT ---
                 const leftPosition = clickedBtn.offsetLeft;
                 const itemWidth = clickedBtn.offsetWidth;
 
@@ -335,6 +345,7 @@ function setupNavigation() {
                 views.forEach(view => view.classList.remove('active-view'));
                 document.getElementById(targetId)?.classList.add('active-view');
                 
+                // Refresh dynamic content
                 if(targetId === 'view-search' && searchInput.value === '') {
                     renderRecentSearches();
                 }

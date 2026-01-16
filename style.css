@@ -1525,7 +1525,7 @@ body.light-theme #back-to-top {
 /* --- AUTOCOMPLETE DROPDOWN (v5.2) --- */
 .autocomplete-items {
     position: absolute;
-    top: 55px; /* Sits perfectly below the 45px input */
+    top: 60px; /* Sits perfectly below the 45px input */
     left: 0;
     right: 0;
     z-index: 1000;

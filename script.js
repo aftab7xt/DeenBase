@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchResults = document.getElementById('search-results');
     const searchHistoryContainer = document.getElementById('search-history-container');
     const recentSearchesList = document.getElementById('recent-searches-list');
+    
+    // --- NEW: Autocomplete Container (v5.2) ---
+    const autocompleteList = document.getElementById('autocomplete-list');
 
     // Reader Elements
     const readerView = document.getElementById('view-reader'); 
@@ -34,19 +37,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const sliderArabic = document.getElementById('fs-arabic');
     const sliderEnglish = document.getElementById('fs-english');
 
-function saveSearchQuery(query) {
-    if (!query || query.length < 2) return;
-    let queries = getStoredData(KEY_QUERIES);
-    
-    // Filter out duplicates (case-insensitive)
-    queries = queries.filter(q => q.toLowerCase() !== query.toLowerCase());
-    
-    // Add to start and limit to 10
-    queries.unshift(query);
-    if (queries.length > 10) queries.pop(); 
-    
-    localStorage.setItem(KEY_QUERIES, JSON.stringify(queries));
-}
+    function saveSearchQuery(query) {
+        if (!query || query.length < 2) return;
+        let queries = getStoredData(KEY_QUERIES);
+        
+        // Filter out duplicates (case-insensitive)
+        queries = queries.filter(q => q.toLowerCase() !== query.toLowerCase());
+        
+        // Add to start and limit to 10
+        queries.unshift(query);
+        if (queries.length > 10) queries.pop(); 
+        
+        localStorage.setItem(KEY_QUERIES, JSON.stringify(queries));
+    }
 
     // --- Config & Storage Keys ---
     const RAW_API_KEY = '$2y$10$83tRfHskMMReLlAtJiFNeQ5SO7xAxYwgGHIDxhLI4HPW8nRJP15';
@@ -62,29 +65,30 @@ function saveSearchQuery(query) {
     const KEY_SETTINGS = 'deenbase_settings';
     
     // --- SMART-HIDE NAVIGATION LOGIC ---
-let lastScrollTop = 0;
-const navBar = document.querySelector('.bottom-nav');
-const scrollContainer = document.getElementById('main-container');
+    let lastScrollTop = 0;
+    const navBar = document.querySelector('.bottom-nav');
+    const scrollContainer = document.getElementById('main-container');
 
-// Only proceed if the elements exist
-if (navBar && scrollContainer) {
-    scrollContainer.addEventListener('scroll', () => {
-        let scrollTop = scrollContainer.scrollTop;
+    // Only proceed if the elements exist
+    if (navBar && scrollContainer) {
+        scrollContainer.addEventListener('scroll', () => {
+            let scrollTop = scrollContainer.scrollTop;
 
-        // Check if user scrolled more than 50px (buffer to prevent flickering)
-        if (Math.abs(lastScrollTop - scrollTop) <= 5) return;
+            // Check if user scrolled more than 50px (buffer to prevent flickering)
+            if (Math.abs(lastScrollTop - scrollTop) <= 5) return;
 
-        if (scrollTop > lastScrollTop && scrollTop > 50) {
-            // Scrolling Down - Hide Nav
-            navBar.classList.add('nav-hidden');
-        } else {
-            // Scrolling Up - Show Nav
-            navBar.classList.remove('nav-hidden');
-        }
-        
-        lastScrollTop = scrollTop;
-    }, { passive: true });
-}
+            if (scrollTop > lastScrollTop && scrollTop > 50) {
+                // Scrolling Down - Hide Nav
+                navBar.classList.add('nav-hidden');
+            } else {
+                // Scrolling Up - Show Nav
+                navBar.classList.remove('nav-hidden');
+            }
+            
+            lastScrollTop = scrollTop;
+        }, { passive: true });
+    }
+
     // --- REGISTER SERVICE WORKER & PWA INSTALL ---
     let deferredPrompt;
     let autoHideTimer; // Timer variable to handle auto-exit
@@ -526,46 +530,146 @@ function generateListHTML(list, type) {
     }
 
     // --- 7. SEARCH ---
-    function setupSearch() {
-        searchBtn.addEventListener('click', performSearch);
-        
-        searchInput.addEventListener('input', (e) => {
-            if (e.target.value.trim() === '') {
-                searchResults.innerHTML = '';
-                renderRecentSearches();
-            }
-        });
-        // Clear Recent button
-    const clearRecentBtn = document.getElementById('clear-recent-btn');
-    if (clearRecentBtn) {
-        clearRecentBtn.addEventListener('click', () => {
-            localStorage.removeItem(KEY_HISTORY);
-            searchHistoryContainer.classList.add('hidden');
-            showToast("Recent searches cleared");
-        });
+      /* --- 7. SEARCH & AUTOCOMPLETE LOGIC (v5.2) --- */
+
+    // Helper: Prevents API spam by waiting 500ms after typing
+    function debounce(func, delay) {
+        let timeoutId;
+        return function(...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
     }
-            // Inside setupSearch()
-    if (clearSearchBtn) {
-        // 1. Show/Hide X based on typing
-        searchInput.addEventListener('input', (e) => {
-            if (e.target.value.length > 0) {
-                clearSearchBtn.classList.remove('hidden');
+
+    // Helper: Fetches live suggestions silently
+    async function fetchLiveSuggestions(query) {
+        const autoList = document.getElementById('autocomplete-list');
+        if (!autoList) return;
+
+        try {
+            // 1. Silent Fetch (No loader, background only)
+            const url = `${BASE_URL}?apiKey=${API_KEY}&book=sahih-bukhari&hadithEnglish=${encodeURIComponent(query)}`;
+            const res = await fetch(url);
+            if (!res.ok) return; 
+            
+            const data = await res.json();
+            const list = data?.hadiths?.data;
+
+            if (list && list.length > 0) {
+                // 2. Limit to Top 5 results to keep the dropdown clean
+                const topResults = list.slice(0, 5);
+                
+                let html = '';
+                topResults.forEach(h => {
+                    // Clean text for preview (remove HTML tags & limit length)
+                    const cleanText = (h.hadithEnglish || "").replace(/<[^>]*>?/gm, '').substring(0, 50) + "...";
+                    
+                    html += `
+                    <div class="suggestion-item">
+                        <span class="material-icons-round" style="font-size:18px; opacity:0.5;">search</span>
+                        <div style="display:flex; flex-direction:column; gap:2px; overflow:hidden;">
+                            <span style="font-size:0.9rem; font-weight:500;">Bukhari ${h.hadithNumber}</span>
+                            <span style="font-size:0.8rem; opacity:0.7; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${cleanText}</span>
+                        </div>
+                    </div>`;
+                });
+
+                autoList.innerHTML = html;
+                autoList.classList.remove('hidden');
+
+                // 3. Attach Click Listeners
+                const items = autoList.querySelectorAll('.suggestion-item');
+                items.forEach((item, index) => {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // UX UPGRADE: Open the reader DIRECTLY on click
+                        openReader(topResults[index]); 
+                        addToHistory(topResults[index]);
+                        
+                        // Cleanup
+                        autoList.classList.add('hidden');
+                        searchInput.blur(); 
+                    });
+                });
+
             } else {
-                clearSearchBtn.classList.add('hidden');
+                autoList.classList.add('hidden');
             }
-        });
-
-        // 2. Clear input when X is clicked
-        clearSearchBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            clearSearchBtn.classList.add('hidden');
-            searchResults.innerHTML = '';
-            renderRecentSearches(); // Re-show history
-            searchInput.focus();
-        });
+        } catch (e) {
+            console.log("Autocomplete offline"); // Silent fail
+        }
     }
 
-        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+    // Main Search Controller
+    function setupSearch() {
+        // 1. Regular Search Button
+        searchBtn.addEventListener('click', () => {
+            document.getElementById('autocomplete-list')?.classList.add('hidden');
+            performSearch();
+        });
+        
+        // 2. Clear Button Logic
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearSearchBtn.classList.add('hidden');
+                searchResults.innerHTML = '';
+                document.getElementById('autocomplete-list')?.classList.add('hidden'); 
+                renderRecentSearches();
+                searchInput.focus();
+            });
+        }
+        
+        // Clear Recent History Button (Restored)
+        const clearRecentBtn = document.getElementById('clear-recent-btn');
+        if (clearRecentBtn) {
+            clearRecentBtn.addEventListener('click', () => {
+                localStorage.removeItem(KEY_HISTORY);
+                searchHistoryContainer.classList.add('hidden');
+                showToast("Recent searches cleared");
+            });
+        }
+
+        // 3. LIVE INPUT LISTENER (The Autocomplete Trigger)
+        searchInput.addEventListener('input', debounce((e) => {
+            const val = e.target.value.trim();
+            
+            // Toggle 'X' button
+            if (val.length > 0) clearSearchBtn.classList.remove('hidden');
+            else clearSearchBtn.classList.add('hidden');
+
+            // Handle Empty State
+            if (val === '') {
+                searchResults.innerHTML = '';
+                document.getElementById('autocomplete-list')?.classList.add('hidden');
+                renderRecentSearches();
+                return;
+            }
+
+            // Trigger API only if 3+ chars (saves data usage)
+            if (val.length >= 3) {
+                fetchLiveSuggestions(val);
+            } else {
+                document.getElementById('autocomplete-list')?.classList.add('hidden');
+            }
+        }, 500)); // Waits 500ms after you stop typing
+
+        // 4. Handle Enter Key
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('autocomplete-list')?.classList.add('hidden');
+                performSearch();
+            }
+        });
+        
+        // 5. Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchInput) {
+                document.getElementById('autocomplete-list')?.classList.add('hidden');
+            }
+        });
     }
 
   async function performSearch() {

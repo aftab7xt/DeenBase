@@ -1547,3 +1547,67 @@ body.light-theme #back-to-top {
         rgba(0, 0, 0, 0) 100%
     );
 }
+/* --- AUTOCOMPLETE DROPDOWN (v5.2) --- */
+.autocomplete-items {
+    position: absolute;
+    top: 55px; /* Sits perfectly below the 45px input */
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    
+    /* Glassmorphism */
+    background: rgba(28, 28, 30, 0.95); /* Slightly darker for readability */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    
+    /* Scroll handling */
+    max-height: 60vh; /* Takes up to 60% of screen height */
+    overflow-y: auto;
+    
+    /* Animation Logic */
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Light Theme Support */
+body.light-theme .autocomplete-items {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* When the 'hidden' class is REMOVED, this state activates */
+.autocomplete-items:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* The Individual Suggestions */
+.suggestion-item {
+    padding: 16px;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: background 0.1s;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+/* Tap Effect */
+.suggestion-item:active {
+    background: var(--accent-color);
+    color: var(--brand-primary); /* Text turns dark on tap */
+}

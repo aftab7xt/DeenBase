@@ -1507,31 +1507,6 @@ body.light-theme #back-to-top {
     -webkit-backdrop-filter: blur(12px);
 }
 
-/* Top Blur: GPU-forced to fix Android artifacts */
-.blur-top {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 60px; 
-    z-index: 20;
-    pointer-events: none;
-    
-    /* 1. The Blur */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-
-    /* 2. The Mask (Simple fade) */
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-
-    /* 3. THE FIX: Stop repeating and force GPU rendering */
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    transform: translateZ(0); /* Forces a new composition layer */
-    -webkit-transform: translateZ(0);
-}
-
 /* Bottom Blur: Stronger fade-out at the very bottom */
 .blur-bottom {
     bottom: 0;

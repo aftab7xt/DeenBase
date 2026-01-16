@@ -920,7 +920,7 @@ async function shareAsImage(elementId) {
                     await navigator.share({
                         files: [file],
                         title: 'DeenBase Hadith',
-                        text: 'Read this hadith on DeenBase.'
+                        text: 'Read more at tinyurl.com/DeenBase'
                     });
                 } catch (err) {
                     console.log('Share cancelled');

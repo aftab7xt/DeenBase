@@ -156,7 +156,8 @@ h2 {
 /* Theme Button */
 .theme-btn {
     width: 100%; background: var(--card-bg); border: 1px solid var(--glass-border);
-    color: var(--text-primary); padding: 12px; border-radius: 12px;
+    color: var(--text-primary); padding: 12px; border-radius: 32px;
+    corner-shape: squircle;
     display: flex; align-items: center; justify-content: center; gap: 8px;
     font-size: 1rem; cursor: pointer;
 }
@@ -226,10 +227,14 @@ body.light-theme .date-badge { background: rgba(0,0,0,0.05); }
     margin-right: -15px; /* ADD */
 }
 .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
-.glass-input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px 16px; color: var(--text-primary); font-size: 16px; outline: none; }
+.glass-input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 32px; 
+corner-shape: squircle;
+padding: 12px 16px; color: var(--text-primary); font-size: 16px; outline: none; }
 body.light-theme .glass-input { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
 .glass-input:focus { border-color: var(--accent-color); }
-.action-btn { background: var(--accent-color); border: none; border-radius: 12px; width: 48px; display: flex; align-items: center; justify-content: center; color: var(--bg-color); cursor: pointer; }
+.action-btn { background: var(--accent-color); border: 1px; border-radius: 40px;
+corner-shape: squircle;
+width: 48px; display: flex; align-items: center; justify-content: center; color: var(--bg-color); cursor: pointer; }
 body.light-theme .action-btn { color: white; }
 
 .results-list {
@@ -246,7 +251,8 @@ body.light-theme .action-btn { color: white; }
 .result-item { 
     background: var(--card-bg); 
     border: 1px solid var(--glass-border); 
-    border-radius: 12px; 
+    border-radius: 40px; 
+    corner-shape: squircle;
     padding: 16px;
     margin-left: -25px;  /* ADD */
     margin-right: -25px; /* ADD */
@@ -274,7 +280,8 @@ body.light-theme .action-btn { color: white; }
 .hadith-card {
     background: var(--card-bg); 
     border: 1px solid var(--glass-border); 
-    border-radius: 16px;
+    border-radius: 40px;
+    corner-shape: squircle;
     padding: 24px; 
     margin-bottom: 40px; 
     margin-left: -15px;  /* ADD THIS */
@@ -665,10 +672,11 @@ body.light-theme .toast-container span {
 .hotd-compact-card {
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
+    border-radius: 40px;
+    corner-shape: squircle;  /* ADD THIS */
     padding: 20px;
-    margin-left: -15px;  /* ADD */
-    margin-right: -15px; /* ADD */
+    margin-left: -15px;
+    margin-right: -15px;
     cursor: pointer;
     position: relative;
     transition: transform 0.2s ease, background 0.2s;
@@ -713,18 +721,19 @@ body.light-theme .toast-container span {
 }
 
 /* --- STEP 19 FIX: Button Contrast --- */
-.action-btn {
-    background: var(--accent-color); /* Gold Background */
-    color: #0F222D;                  /* Dark Text (Force Dark Green) */
-    
-    /* Ensure basic structure is there */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s;
+.action-btn { 
+    background: var(--accent-color); 
+    border: none; 
+    border-radius: 20px;  /* Smaller radius for the button */
+    corner-shape: squircle;
+    width: 50px;   /* Make it slightly bigger */
+    height: 50px;  /* ADD THIS - makes it square */
+    flex-shrink: 0; /* Prevents it from being squeezed */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--bg-color); 
+    cursor: pointer; 
 }
 
 .action-btn:active {
@@ -1050,7 +1059,8 @@ input:checked + .slider:before {
     /* 4. Visuals: Exactly like your Hadith/Settings cards */
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
+    border-radius: 40px;
+    corner-shape: squircle;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     
@@ -1277,7 +1287,8 @@ body.light-theme .home-logo-container .app-logo-img {
 .preview-card {
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 12px;
+    border-radius: 32px;
+    corner-shape: squircle;
     padding: 20px;
     margin-bottom: 10px;
     text-align: center;
@@ -1311,7 +1322,8 @@ body.light-theme .home-logo-container .app-logo-img {
     
     /* 2. Style Basics */
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
+    border-radius: 40px;
+    corner-shape: squircle;
     padding: 20px;
     margin-bottom: 30px;
     background: transparent;
@@ -1362,7 +1374,8 @@ html, body {
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    border-radius: 40px;
+    corner-shape: squircle;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1425,7 +1438,8 @@ html, body {
     color: #000000;
     border: none;
     padding: 8px 16px;
-    border-radius: 10px;
+    border-radius: 30px;
+    corner-shape: squircle;
     font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;
@@ -1455,7 +1469,8 @@ html, body {
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--glass-border);
     
-    border-radius: 50px; 
+    border-radius: 60px; 
+    corner-shape: squircle;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1535,8 +1550,8 @@ body.light-theme #back-to-top {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    
+    border-radius: 40px;
+    corner-shape: squircle;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     
     /* Scroll handling */

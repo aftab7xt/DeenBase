@@ -55,7 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const RAW_API_KEY = '$2y$10$83tRfHskMMReLlAtJiFNeQ5SO7xAxYwgGHIDxhLI4HPW8nRJP15';
     const API_KEY = encodeURIComponent(RAW_API_KEY);
     const BASE_URL = 'https://hadithapi.com/api/hadiths';
-    
+        // --- CONFIG: Book List ---
+    const BOOKS = [
+        { id: 'sahih-bukhari', name: 'Bukhari' },
+        { id: 'sahih-muslim', name: 'Muslim' },
+        { id: 'al-tirmidhi', name: 'Tirmidhi' },
+        { id: 'abu-dawood', name: 'Abu Dawood' },
+        { id: 'ibn-e-majah', name: 'Ibn Majah' },
+        { id: 'sunan-nasai', name: 'Nasai' },
+        { id: 'mishkat', name: 'Mishkat' },
+        { id: 'musnad-ahmad', name: 'Musnad Ahmad' },
+        { id: 'al-silsila-sahiha', name: 'Silsila' }
+    ];
+
     const HOTD_IDS = [1, 7, 13, 27, 42, 58, 9, 3, 52]; 
     const KEY_HOTD = 'deenbase_hotd_data';
     const KEY_DATE = 'deenbase_hotd_date';
@@ -462,16 +474,26 @@ function setupLibrary() {
     });
 }
 
-function generateListHTML(list, type) {
-    let html = '';
-    list.forEach((hadith, index) => {
-        const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
-        const preview = cleanText.substring(0, 60) + '...';
-        const icon = type === 'history' ? 'history' : 'bookmark';
-        html += `<div class="result-item ${type}-item" data-index="${index}"><div class="result-ref">Bukhari ${hadith.hadithNumber}</div><div class="result-preview">${preview}</div><span class="material-icons-round cache-badge">${icon}</span></div>`;
-    });
-    return html;
-}
+    function generateListHTML(list, type) {
+        let html = '';
+        list.forEach((hadith, index) => {
+            const cleanText = (hadith.hadithEnglish || "").replace(/<[^>]*>?/gm, '');
+            const preview = cleanText.substring(0, 60) + '...';
+            const icon = type === 'history' ? 'history' : 'bookmark';
+            
+            // USE THE DYNAMIC BOOK NAME (Default to Bukhari if missing)
+            const bookDisplay = hadith.bookName || "Bukhari";
+            
+            html += `
+            <div class="result-item ${type}-item" data-index="${index}">
+                <div class="result-ref">${bookDisplay} ${hadith.hadithNumber}</div>
+                <div class="result-preview">${preview}</div>
+                <span class="material-icons-round cache-badge">${icon}</span>
+            </div>`;
+        });
+        return html;
+    }
+
     function attachListListeners(type, data) {
         document.querySelectorAll(`.${type}-item`).forEach(item => {
             item.addEventListener('click', () => {
@@ -683,58 +705,64 @@ function generateListHTML(list, type) {
         });
     }
 
-  async function performSearch() {
-    const query = searchInput.value.trim();
-    if (!query) {
-        renderRecentSearches();
-        return;
-    }
-    
-    // Save the actual search string to your keyword history
-    saveSearchQuery(query); 
-
-    if(searchHistoryContainer) searchHistoryContainer.classList.add('hidden');
-    showLoader(); 
-    if (typeof hideReader === 'function') hideReader(); 
-    searchResults.innerHTML = '';
-
-    try {
-        let url;
-        const isNumber = /^\d+$/.test(query); 
-
-        if (isNumber) {
-            url = `${BASE_URL}?apiKey=${API_KEY}&book=sahih-bukhari&hadithNumber=${query}`;
-        } else {
-            url = `${BASE_URL}?apiKey=${API_KEY}&book=sahih-bukhari&hadithEnglish=${encodeURIComponent(query)}`;
+    async function performSearch() {
+        const query = searchInput.value.trim();
+        if (!query) {
+            renderRecentSearches();
+            return;
         }
-
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Network');
-        const data = await res.json();
         
-        const list = data?.hadiths?.data;
-        if (list && list.length > 0) {
-            renderSearchResults(list);
-        } else {
-            searchResults.innerHTML = `
-                <div class="placeholder-content">
-                    <span class="material-icons-round" style="opacity:0.5; font-size: 48px;">search_off</span>
-                    <p style="margin-top: 16px;">No results for "${query}"</p>
-                </div>`;
+        saveSearchQuery(query); 
+        if(searchHistoryContainer) searchHistoryContainer.classList.add('hidden');
+        showLoader(); 
+        if (typeof hideReader === 'function') hideReader(); 
+        searchResults.innerHTML = '';
+
+        try {
+            const isNumber = /^\d+$/.test(query);
+            
+            // 1. Create a request for EVERY book
+            const searchPromises = BOOKS.map(book => {
+                let url;
+                if (isNumber) {
+                    url = `${BASE_URL}?apiKey=${API_KEY}&book=${book.id}&hadithNumber=${query}`;
+                } else {
+                    url = `${BASE_URL}?apiKey=${API_KEY}&book=${book.id}&hadithEnglish=${encodeURIComponent(query)}`;
+                }
+
+                // Fetch and attach the book name to the results immediately
+                return fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        const items = data?.hadiths?.data || [];
+                        // Inject the book name into every hadith object so we can display it later
+                        return items.map(item => ({ ...item, bookName: book.name }));
+                    })
+                    .catch(() => []); // If one book fails, just ignore it
+            });
+
+            // 2. Wait for ALL books to finish
+            const resultsArrays = await Promise.all(searchPromises);
+            
+            // 3. Flatten the array (turn [[Bukhari 1], [Muslim 1]] into [Bukhari 1, Muslim 1])
+            const allHadiths = resultsArrays.flat();
+
+            if (allHadiths.length > 0) {
+                renderSearchResults(allHadiths);
+            } else {
+                searchResults.innerHTML = `
+                    <div class="placeholder-content">
+                        <span class="material-icons-round" style="opacity:0.5; font-size: 48px;">search_off</span>
+                        <p style="margin-top: 16px;">No results for "${query}"</p>
+                    </div>`;
+            }
+        } catch (error) {
+            console.error("Search Error:", error);
+            searchResults.innerHTML = '<p class="placeholder-message" style="color:#ef4444;">Connection Failed</p>';
+        } finally { 
+            hideLoader(); 
         }
-    } catch (error) {
-        console.error("Search Error:", error);
-        // Fallback to local data if available
-        const bookmarks = getStoredData(KEY_BOOKMARKS);
-        const found = bookmarks.find(b => b.hadithNumber == query);
-        
-        if (found) renderSearchResults([found]);
-        else searchResults.innerHTML = '<p class="placeholder-message" style="color:#ef4444;">No results found or you are offline.</p>';
-    } finally { 
-        hideLoader(); 
     }
-}
-
 
     function renderSearchResults(hadiths) {
         searchResults.innerHTML = generateListHTML(hadiths, 'result');
@@ -854,7 +882,7 @@ if (appHeader) appHeader.classList.remove('reader-active');
             <div class="hadith-card" id="${uniqueId}">
                 <div class="hadith-header">
                     <div>
-                        <span class="hadith-ref">Bukhari ${refNumber}</span>
+                        <span class="hadith-ref">${hadith.bookName || 'Bukhari'} ${refNumber}</span>
                         <div style="font-size: 0.7rem; opacity: 0.7; margin-top:2px;">${chapter}</div>
                     </div>
                     <div class="card-controls">

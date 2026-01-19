@@ -227,9 +227,18 @@ body.light-theme .date-badge { background: rgba(0,0,0,0.05); }
     margin-right: -15px; /* ADD */
 }
 .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
-.glass-input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 32px; 
-corner-shape: squircle;
-padding: 12px 16px; color: var(--text-primary); font-size: 16px; outline: none; }
+.glass-input { 
+    flex: 1; 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid var(--glass-border); 
+    border-radius: 32px; 
+    corner-shape: squircle;
+    height: 50px;  /* ADD THIS - matches button height */
+    padding: 0 16px;  /* Changed to horizontal padding only */
+    color: var(--text-primary); 
+    font-size: 16px; 
+    outline: none; 
+}
 body.light-theme .glass-input { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
 .glass-input:focus { border-color: var(--accent-color); }
 .action-btn { background: var(--accent-color); border: 1px; border-radius: 40px;
@@ -318,9 +327,13 @@ body.light-theme .lang-toggle { background: rgba(0,0,0,0.05); border-color: rgba
 .bookmark-btn.bookmarked { color: var(--accent-color); }
 
 /* Library Segmented Control */
-.segmented-control { display: flex; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--glass-border); }
+.segmented-control { display: flex; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 40px;
+corner-shape: squircle;
+margin-bottom: 20px; border: 1px solid var(--glass-border); }
 body.light-theme .segmented-control { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.05); }
-.segment { flex: 1; background: transparent; border: none; color: var(--text-secondary); padding: 8px; font-size: 0.9rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.segment { flex: 1; background: transparent; border: none; color: var(--text-secondary); padding: 8px; font-size: 0.9rem; border-radius: 40px;
+corner-shape: squircle;
+cursor: pointer; transition: all 0.2s; }
 .segment.active { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); font-weight: 500; }
 body.light-theme .segment.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
@@ -362,6 +375,7 @@ body.light-theme .segment.active { background: white; box-shadow: 0 1px 3px rgba
     z-index: 100;
     
     border-radius: 50px; 
+    corner-shape: squircle;
     padding: 6px;
     
     background: var(--glass-bg);
@@ -455,6 +469,7 @@ body.light-theme .nav-item.active {
     
     background: rgba(255, 255, 255, 0.15);
     border-radius: 50px;
+    corner-shape: squircle;
     top: 6px;
     
     /* Add width to the transition so it grows/shrinks if buttons aren't equal */
@@ -523,6 +538,7 @@ body.light-theme .nav-item.active {
     
     padding: 14px 28px;      /* More internal breathing room */
     border-radius: 50px;
+    corner-shape: squircle;
     display: flex;
     align-items: center;
     justify-content: center; /* Centers content if it wraps */
@@ -1216,7 +1232,8 @@ body:not(.light-theme) .app-logo-img {
     flex: 1; /* Both buttons take equal width */
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
-    border-radius: 10px; /* Pill shape like your doodle */
+    border-radius: 40px; /* Pill shape like your doodle */
+    corner-shape: squircle;
     padding: 12px;
     display: flex;
     align-items: center;

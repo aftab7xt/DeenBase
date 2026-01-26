@@ -111,7 +111,7 @@ h1, h2, h3 { font-weight: 600; }
     background: var(--glass-bg); 
     backdrop-filter: blur(var(--glass-blur)); 
     -webkit-backdrop-filter: blur(var(--glass-blur)); /* For Safari/iOS */
-    border-top: 1px solid var(--glass-border); 
+    /* border-top: 1px solid var(--glass-border); ← REMOVE THIS LINE */
 }
 /* --- LAYOUT FIXES (Paste this in style.css) --- */
 
@@ -314,9 +314,15 @@ body.light-theme .hadith-header { border-bottom: 1px solid rgba(0,0,0,0.05); }
 }
 .hadith-urdu { 
     font-family: 'Amiri', serif; 
-    font-size: 1.3rem; 
-    line-height: 2; color: var(--text-secondary); 
-    text-align: right; direction: rtl; display: none; 
+    
+    /* UPDATED: Links to the slider, but adds 0.2rem so it's readable */
+    font-size: calc(var(--fs-english) + 0.2rem);
+    
+    line-height: 2; 
+    color: var(--text-secondary); 
+    text-align: right; 
+    direction: rtl; 
+    display: none; 
 }
 
 /* Card Controls */
@@ -1472,15 +1478,14 @@ html, body {
     align-items: center;
     justify-content: center;
 }
-/* --- BACK TO TOP BUTTON (v5.2) --- */
+/* --- BACK TO TOP BUTTON (v5.3 Ghost Fade) --- */
 #back-to-top {
     position: fixed;
     right: 20px;
-    top: 55%; /* Middle-right for easy thumb access */
+    top: 55%; 
     width: 48px;
     height: 48px;
     
-    /* Using your glass variables from the nav block */
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -1495,25 +1500,28 @@ html, body {
     
     color: var(--text-primary);
     cursor: pointer;
-    
-    /* Using your cubic-bezier for consistency */
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                opacity 0.3s ease, 
-                visibility 0.3s;
-    
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     -webkit-tap-highlight-color: transparent;
+
+    /* ANIMATION MAGIC: Smooth fade in/out */
+    opacity: 1;
+    transform: scale(1);
+    visibility: visible;
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0.4s;
 }
 
-/* Slides right and shrinks when hidden */
+/* Hidden State (Ghost Mode) */
 #back-to-top.hidden {
     opacity: 0;
     visibility: hidden;
-    transform: translateX(30px) scale(0.8);
+    transform: scale(0.8); 
     pointer-events: none;
+    
+    /* OVERRIDE the global .hidden class so animation works */
+    display: flex !important; 
 }
 
-/* Tap feedback */
+/* Active Press */
 #back-to-top:active {
     transform: scale(0.9);
     background: rgba(255, 255, 255, 0.1);
@@ -1617,4 +1625,49 @@ body.light-theme .autocomplete-items {
 .suggestion-item:active {
     background: var(--accent-color);
     color: var(--brand-primary); /* Text turns dark on tap */
+}
+/* --- SEGMENTED CONTROL ANIMATION (v5.3) --- */
+
+/* 1. Set the container context */
+.segmented-control {
+    position: relative; /* Needed for absolute positioning */
+    z-index: 1;
+    isolation: isolate; /* Creates a new stacking context */
+}
+
+/* 2. The Sliding "Pill" */
+.segment-glider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    
+    /* We calculate width based on 2 buttons (50%) minus spacing */
+    width: calc(50% - 6px); 
+    
+    background: rgba(255, 255, 255, 0.1); /* The highlight color */
+    border-radius: 32px;
+    corner-shape: squircle;
+    
+    z-index: -1; /* Sits BEHIND the text */
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Light Mode Support */
+body.light-theme .segment-glider {
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* 3. Make Buttons Transparent (So we see the glider) */
+.segment {
+    background: transparent !important; /* Override old background */
+    z-index: 2;
+}
+
+/* Remove the old shadow/background from active state */
+body.light-theme .segment.active {
+    background: transparent !important;
+    box-shadow: none !important;
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'deenbase-v5.2.3';
+const CACHE_NAME = 'deenbase-v5.3.0';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

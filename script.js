@@ -912,7 +912,7 @@ if (appHeader) appHeader.classList.remove('reader-active');
     shareBtn.addEventListener('click', () => shareAsImage(cardId));
 }
 
-// --- 10. SHARE IMAGE (v4.1 Moctale Style Footer) ---
+// --- 10. SHARE IMAGE (v5.4 Big Ref & Perfect Gaps) ---
 async function shareAsImage(elementId) {
     if (typeof html2canvas === 'undefined') {
         alert("Error: html2canvas library missing. Check internet/script tag.");
@@ -923,6 +923,19 @@ async function shareAsImage(elementId) {
     if (!element) return;
 
     showToast("Generating image...");
+
+    // --- MAP SHORT NAMES TO FULL NAMES ---
+    const FULL_NAMES = {
+        'Bukhari': 'Sahih al-Bukhari',
+        'Muslim': 'Sahih Muslim',
+        'Tirmidhi': 'Jami` at-Tirmidhi',
+        'Abu Dawood': 'Sunan Abu Dawood',
+        'Ibn Majah': 'Sunan Ibn Majah',
+        'Nasai': 'Sunan an-Nasa\'i',
+        'Mishkat': 'Mishkat al-Masabih',
+        'Musnad Ahmad': 'Musnad Ahmad',
+        'Silsila': 'As-Silsilah as-Sahihah'
+    };
 
     try {
         const clone = element.cloneNode(true);
@@ -937,17 +950,79 @@ async function shareAsImage(elementId) {
         clone.style.color = '#FFFFFF';           
         clone.style.border = 'none';
         clone.style.borderRadius = '0'; 
-        clone.style.padding = '50px 50px 40px 50px'; 
         
+        // FIX: Top padding set to 60px. Sides 50px.
+        // We set bottom to 0 because the footer handles the bottom spacing.
+        clone.style.padding = '60px 50px 0 50px'; 
+        
+        // --- CLEANUP ELEMENTS ---
         const controls = clone.querySelector('.card-controls');
         if(controls) controls.remove();
 
-        // 2. Custom Footer Layout (Based on Doodles)
+        const arabicText = clone.querySelector('.hadith-arabic');
+        if(arabicText) arabicText.remove(); 
+        
+        // --- REMOVE CHAPTER TITLE ---
+        const headerDivs = clone.querySelectorAll('.hadith-header div');
+        headerDivs.forEach(div => {
+            if(div.style.fontSize === '0.7rem' || div.style.opacity === '0.7') {
+                div.remove();
+            }
+        });
+
+        // --- JUSTIFY ENGLISH ---
+        const englishText = clone.querySelector('.hadith-english');
+        if(englishText) {
+            englishText.style.textAlign = 'justify'; 
+            englishText.style.hyphens = 'none';
+            englishText.style.webkitHyphens = 'none';
+            englishText.style.wordBreak = 'normal'; 
+            
+            englishText.style.fontSize = '1.4rem';  
+            englishText.style.lineHeight = '1.6';
+            englishText.style.marginTop = '20px';
+            // FIX: Remove bottom margin to ensure exact spacing to footer
+            englishText.style.marginBottom = '0px'; 
+            englishText.style.fontFamily = "'Archivo', sans-serif";
+            englishText.style.textAlignLast = 'left'; 
+        }
+
+        // --- FORMAT REFERENCE (Bigger & Bolder) ---
+        const ref = clone.querySelector('.hadith-ref');
+        if(ref) {
+             let text = ref.textContent.trim();
+             
+             // Replace Short Name with Full Name
+             Object.keys(FULL_NAMES).forEach(short => {
+                 if(text.includes(short)) {
+                     text = text.replace(short, FULL_NAMES[short]);
+                 }
+             });
+             
+             ref.textContent = text;
+             
+             ref.style.textAlign = 'left'; 
+             ref.style.display = 'block'; 
+             ref.style.marginBottom = '20px';
+             
+             // UPDATED STYLES FOR VISIBILITY
+             ref.style.opacity = '1';         // Full white (was 0.7)
+             ref.style.fontSize = '1.2rem';   // Bigger (was 0.9rem)
+             ref.style.fontWeight = '700';    // Bold
+             ref.style.letterSpacing = '0.15em';
+             ref.style.textTransform = 'uppercase';
+        }
+
+        // 2. Custom Footer Layout
         const footer = document.createElement('div');
-        footer.style.marginTop = '40px';
+        
+        // FIX: Match Top Padding (60px) perfectly
+        footer.style.marginTop = '60px'; 
+        footer.style.paddingBottom = '60px'; 
+        
         footer.style.display = 'flex';
         footer.style.alignItems = 'center';
-        footer.style.justifyContent = 'space-between'; // Pushes line left and branding right
+        footer.style.justifyContent = 'space-between'; 
         footer.style.width = '100%';
 
         footer.innerHTML = `

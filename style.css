@@ -125,7 +125,12 @@ h1, h2, h3 { font-weight: 600; }
     padding-top: 10px !important; 
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 20px; /* Gives just a tiny bit of breathing room at the very end */
+    padding-bottom: 20px; 
+    
+    /* --- THE FIX --- */
+    /* This disables horizontal scrolling interaction without cutting content */
+    touch-action: pan-y; 
+    overscroll-behavior-x: none;
 }
 
 /* 2. Reset View Padding */

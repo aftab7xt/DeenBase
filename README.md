@@ -28,8 +28,7 @@ Just content.
 
 ## 🚧 Status
 
-Actively developed.  
-Features are being added.
+Development paused.
 
 ---
 
